@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Database\Seeders\OrientationSeeder;
+use Database\Seeders\RoleSeeder;
+use Database\Seeders\UserSeeder;
+use Database\Seeders\TagSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +17,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        $this->call([
+            OrientationSeeder::class,
+            RoleSeeder::class,
+            UserSeeder::class,
+            TagSeeder::class,
+        ]);
     }
 }

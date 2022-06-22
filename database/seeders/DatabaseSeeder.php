@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             OrientationSeeder::class,
             RoleSeeder::class,
-            UserSeeder::class,
             TagSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }

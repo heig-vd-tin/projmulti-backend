@@ -21,5 +21,26 @@ class UserSeeder extends Seeder
             'role_id' => 1,
             'orientation_id' => 1,
         ]);
+        User::create([
+            'firstname' => 'Yves',
+            'lastname' => 'Chevallier',
+            'email' => 'yves.chevallier@heig-vd.ch',
+            'role_id' => 2,
+            'orientation_id' => 2,
+        ]);
+        User::create([
+            'firstname' => 'Tony',
+            'lastname' => 'Maulaz',
+            'email' => 'tony.maulaz@heig-vd.ch',
+            'role_id' => 2,
+            'orientation_id' => 1,
+        ]);
+        User::create([
+            'firstname' => 'Kevin',
+            'lastname' => 'Nikev',
+            'email' => 'kevin.nikev@heig-vd.ch',
+            'role_id' => 4,
+            'orientation_id' => 3,
+        ]);
     }
 }

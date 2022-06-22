@@ -27,8 +27,11 @@ Route::get('/users', function () {
 });
 
 Route::prefix('/project')->group(function () {
-    Route::get('/all', [ProjectController::class, 'index']);
+    Route::get('/all', [ProjectController::class, 'getAll']);
+    Route::get('/preffered', [ProjectController::class, 'getPreffered']);
     Route::post('/submit', [ProjectController::class, 'store']);
+    Route::post('/add-preference', [ProjectController::class, 'addPreference']);
+    Route::post('/remove-preference', [ProjectController::class, 'removePreference']);
 });
 
 Route::get('/orientation/all', function () {

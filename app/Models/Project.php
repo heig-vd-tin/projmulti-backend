@@ -24,4 +24,9 @@ class Project extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+
+    public function preferences()
+    {
+        return $this->hasMany(Preference::class);
+    }
 }

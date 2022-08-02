@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Http\Requests\ProjectFormRequest;
 use App\Http\Requests\PreferenceFormRequest;
+use App\Models\Attribution;
 use App\Models\Orientation;
 use App\Models\Preference;
 use App\Models\Tag;
@@ -20,7 +21,7 @@ class ProjectController extends Controller
      */
     public function getAll()
     {
-        return Project::all()->load(['orientations', 'tags']);
+        return Project::all()->load(['orientations', 'tags', 'attributed_users']);
     }
 
     public function getPreffered()
@@ -85,6 +86,29 @@ class ProjectController extends Controller
             Preference::destroy($preference->id);
         }
         return $this->getPreffered();
+    }
+
+    public function addAttribution(PreferenceFormRequest $request)
+    {
+        $user = User::find(1);
+        foreach ($request->projects_id as $project_id) {
+            $attribution = Attribution::firstOrCreate([
+                'project_id' => $project_id,
+                'user_id' => $user->id,
+            ]);
+            $attribution->save();
+        }
+        //return $this->getPreffered();
+    }
+
+    public function removeAttribution(PreferenceFormRequest $request)
+    {
+        $user = User::find(1);
+        foreach ($request->projects_id as $project_id) {
+            $attribution = Attribution::whereBelongsTo(Project::find($project_id))->whereBelongsTo($user)->first();
+            Attribution::destroy($attribution->id);
+        }
+        //return $this->getPreffered();
     }
 
     /**

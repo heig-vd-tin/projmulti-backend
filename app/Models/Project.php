@@ -29,4 +29,9 @@ class Project extends Model
     {
         return $this->hasMany(Preference::class);
     }
+
+    public function attributed_users()
+    {
+        return $this->belongsToMany(User::class, 'attributions');
+    }
 }

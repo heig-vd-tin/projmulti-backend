@@ -54,9 +54,12 @@ class ProjectController extends Controller
             'description' => $request->description,
             'owner_id' => $user->id,
         ]);
-        $project->orientations()->attach(Orientation::whereIn('name', $request->orientations)->get());
+        foreach($request->orientations as $orientation){
+            $project->orientations()->attach(Orientation::where('name', $orientation)->get(), ['importance' => $orientation['importance']]);
+        }
+        // $project->orientations()->attach(Orientation::whereIn('name', $request->orientations)->get());
         $project->tags()->attach(Tag::whereIn('name', $request->tags)->get());
-        return $project;
+        return $project->fresh();
     }
 
     public function addPreference(PreferenceFormRequest $request)
@@ -77,8 +80,7 @@ class ProjectController extends Controller
     {
         $user = User::find(1);
         foreach ($request->projects_id as $project_id) {
-            $preference = Preference::whereBelongsTo(Project::find($project_id))->whereBelongsTo($user)->first();
-            Preference::destroy($preference->id);
+            Preference::whereBelongsTo(Project::find($project_id))->whereBelongsTo($user)->delete();
         }
         return $this->getPreffered();
     }

@@ -15,6 +15,8 @@ class Project extends Model
         'owner_id',
     ];
 
+    protected $with = ['orientations', 'tags', 'attributed_users'];
+
     public function orientations()
     {
         return $this->belongsToMany(Orientation::class);

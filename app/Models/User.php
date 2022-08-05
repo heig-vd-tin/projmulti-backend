@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Preference::class);
     }
+
+    public function attributions()
+    {
+        return $this->hasMany(Attribution::class);
+    }
 }

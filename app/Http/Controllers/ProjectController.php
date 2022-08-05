@@ -14,14 +14,9 @@ use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function getAll()
     {
-        return Project::all()->load(['orientations', 'tags', 'attributed_users']);
+        return Project::all();
     }
 
     public function getPreffered()
@@ -30,7 +25,7 @@ class ProjectController extends Controller
         $preferences = Preference::whereBelongsTo($user)->orderBy('priority')->get();
         $projects = collect();
         foreach ($preferences as $preference) {
-            $projects->push(Project::find($preference->project_id)->load(['orientations', 'tags']));
+            $projects->push(Project::find($preference->project_id));
         }
         return $projects;
     }
@@ -61,7 +56,7 @@ class ProjectController extends Controller
         ]);
         $project->orientations()->attach(Orientation::whereIn('name', $request->orientations)->get());
         $project->tags()->attach(Tag::whereIn('name', $request->tags)->get());
-        return $project->load(['orientations', 'tags']);
+        return $project;
     }
 
     public function addPreference(PreferenceFormRequest $request)
@@ -88,27 +83,22 @@ class ProjectController extends Controller
         return $this->getPreffered();
     }
 
-    public function addAttribution(PreferenceFormRequest $request)
+    public function addAttribution(Request $request)
     {
-        $user = User::find(1);
-        foreach ($request->projects_id as $project_id) {
-            $attribution = Attribution::firstOrCreate([
-                'project_id' => $project_id,
-                'user_id' => $user->id,
-            ]);
-            $attribution->save();
-        }
-        //return $this->getPreffered();
+        $request->validate([
+            'project_id' => 'required',
+            'user_id' => 'required',
+        ]);
+        Attribution::updateOrCreate(
+            ['user_id' => $request->user_id],
+            ['project_id' => $request->project_id]
+        );
     }
 
-    public function removeAttribution(PreferenceFormRequest $request)
+    public function removeAttribution(Request $request)
     {
-        $user = User::find(1);
-        foreach ($request->projects_id as $project_id) {
-            $attribution = Attribution::whereBelongsTo(Project::find($project_id))->whereBelongsTo($user)->first();
-            Attribution::destroy($attribution->id);
-        }
-        //return $this->getPreffered();
+        $request->validate(['user_id' => 'required']);
+        Attribution::whereBelongsTo(User::find($request->user_id))->delete();
     }
 
     /**

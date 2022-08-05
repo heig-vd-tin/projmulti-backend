@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\UserController;
 use App\Models\Orientation;
 use App\Models\Tag;
 use App\Models\User;
@@ -35,6 +36,7 @@ Route::get('/tag/all', function () {
     return Tag::all();
 });
 
-Route::get('/user/all', function () {
-    return User::orderBy('lastname')->get();
+Route::prefix('/user')->group(function () {
+    Route::get('/all', [UserController::class, 'getAll']);
+    Route::get('/unassigned', [UserController::class, 'getUnassigned']);
 });

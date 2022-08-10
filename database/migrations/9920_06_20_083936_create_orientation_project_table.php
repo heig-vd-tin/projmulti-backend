@@ -15,6 +15,7 @@ class CreateOrientationProjectTable extends Migration
     {
         Schema::create('orientation_project', function (Blueprint $table) {
             $table->id();
+            $table->integer('importance')->default(1);
             $table->unsignedBigInteger('orientation_id');
             $table->unsignedBigInteger('project_id');
 

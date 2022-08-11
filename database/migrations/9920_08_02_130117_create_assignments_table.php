@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAttributionsTable extends Migration
+class CreateAssignmentsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateAttributionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('attributions', function (Blueprint $table) {
+        Schema::create('assignments', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->unsignedBigInteger('project_id');
@@ -31,6 +31,6 @@ class CreateAttributionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('attributions');
+        Schema::dropIfExists('assignment');
     }
 }

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Models\Orientation;
+use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
 
@@ -19,14 +20,22 @@ use App\Models\User;
 */
 
 Route::middleware('auth:api')->group(function () {
-    Route::prefix('/project')->group(function () {
-        Route::get('/all', [ProjectController::class, 'getAll']);
-        Route::get('/preffered', [ProjectController::class, 'getPreffered']);
-        Route::post('/submit', [ProjectController::class, 'store']);
-        Route::post('/add-preference', [ProjectController::class, 'addPreference']);
-        Route::post('/remove-preference', [ProjectController::class, 'removePreference']);
-        Route::post('/add-attribution', [ProjectController::class, 'addAttribution']);
-        Route::post('/remove-attribution', [ProjectController::class, 'removeAttribution']);
+    Route::prefix('/project')->controller(ProjectController::class)->group(function () {
+        Route::get('/all', 'getAll')->can('viewAll', Project::class);
+        Route::get('/preffered', 'getPreffered');
+        Route::get('/assigned', 'getAssigned');
+
+        Route::post('/submit', 'store');
+        Route::post('/add-preference', 'addPreference');
+        Route::post('/remove-preference', 'removePreference');
+        Route::post('/add-attribution', 'addAttribution');
+        Route::post('/remove-attribution', 'removeAttribution');
+    });
+
+    Route::prefix('/user')->controller(UserController::class)->group(function () {
+        Route::get('', 'getMyself');
+        Route::get('/all', 'getAll');
+        Route::get('/unassigned', 'getUnassigned');
     });
 
     Route::get('/orientation/all', function () {
@@ -35,10 +44,5 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/tag/all', function () {
         return Tag::all();
-    });
-
-    Route::prefix('/user')->group(function () {
-        Route::get('/all', [UserController::class, 'getAll']);
-        Route::get('/unassigned', [UserController::class, 'getUnassigned']);
     });
 });

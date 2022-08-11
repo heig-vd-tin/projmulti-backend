@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function getMyself(Request $request)
+    {
+        return $request->user();
+    }
+
     public function getAll()
     {
         return User::orderBy('lastname')->get();
@@ -14,7 +19,7 @@ class UserController extends Controller
 
     public function getUnassigned()
     {
-        return User::doesntHave('attributions')->orderBy('lastname')->get();
+        return User::doesntHave('assignments')->orderBy('lastname')->get();
     }
 
     /**

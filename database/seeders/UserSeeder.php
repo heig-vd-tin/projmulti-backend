@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -16,36 +15,39 @@ class UserSeeder extends Seeder
     public function run()
     {
         User::create([
-            'firstname' => 'Tristan',
-            'lastname' => 'Lieberherr',
-            'email' => 'tristan.lieberherr@heig-vd.ch',
+            'firstname' => 'Admin',
+            'lastname' => 'Test',
+            'email' => 'admin.test@heig-vd.ch',
             'role_id' => 1,
-            'orientation_id' => 1,
-            'password' => Hash::make('password'),
+            'orientation_id' => 1
         ]);
         User::create([
-            'firstname' => 'Yves',
-            'lastname' => 'Chevallier',
-            'email' => 'yves.chevallier@heig-vd.ch',
+            'firstname' => 'Professor1',
+            'lastname' => 'Test',
+            'email' => 'professor1.test@heig-vd.ch',
             'role_id' => 2,
-            'orientation_id' => 2,
-            'password' => Hash::make('password'),
+            'orientation_id' => 1
         ]);
         User::create([
-            'firstname' => 'Tony',
-            'lastname' => 'Maulaz',
-            'email' => 'tony.maulaz@heig-vd.ch',
+            'firstname' => 'Professor2',
+            'lastname' => 'Test',
+            'email' => 'professor2.test@heig-vd.ch',
             'role_id' => 2,
-            'orientation_id' => 1,
-            'password' => Hash::make('password'),
+            'orientation_id' => 1
         ]);
         User::create([
-            'firstname' => 'Kevin',
-            'lastname' => 'Nikev',
-            'email' => 'kevin.nikev@heig-vd.ch',
+            'firstname' => 'Student1',
+            'lastname' => 'Test',
+            'email' => 'student1.test@heig-vd.ch',
             'role_id' => 4,
-            'orientation_id' => 3,
-            'password' => Hash::make('password'),
+            'orientation_id' => 1
+        ]);
+        User::create([
+            'firstname' => 'Student2',
+            'lastname' => 'Test',
+            'email' => 'student2.test@heig-vd.ch',
+            'role_id' => 4,
+            'orientation_id' => 1
         ]);
     }
 }

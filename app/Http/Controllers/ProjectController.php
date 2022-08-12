@@ -11,44 +11,35 @@ use App\Models\Preference;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Constants\UserRole;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
     public function getAll(Request $request)
     {
-        //$user = $request->user();
-        //$this->authorize('viewAll', Project::class);
         return Project::all();
     }
 
-    public function getPreffered(Request $request)
+    public function getOwned(Request $request)
     {
         $user = $request->user();
-        $preferences = Preference::whereBelongsTo($user)->orderBy('priority')->get();
-        $projects = collect();
-        foreach ($preferences as $preference) {
-            $projects->push(Project::find($preference->project_id));
-        }
-        return $projects;
+        return Project::where('owner_id', $user->id)->get();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function getPreferred(Request $request)
     {
-        //
+        $user = $request->user();
+        return $user->preferences->load('project');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(ProjectFormRequest $request)
+    public function getAssigned(Request $request)
+    {
+        $user = $request->user();
+        return Project::find($user->assignments->pluck('id'));
+    }
+
+    public function createProject(ProjectFormRequest $request)
     {
         $user = $request->user();
         $project = Project::create([
@@ -56,36 +47,52 @@ class ProjectController extends Controller
             'description' => $request->description,
             'owner_id' => $user->id,
         ]);
-        foreach($request->orientations as $orientation){
-            $project->orientations()->attach(Orientation::where('name', $orientation)->get(), ['importance' => $orientation['importance']]);
-        }
-        // $project->orientations()->attach(Orientation::whereIn('name', $request->orientations)->get());
-        $project->tags()->attach(Tag::whereIn('name', $request->tags)->get());
+        foreach ($request->orientations as $o) $orientations[$o['id']] = ['importance' => $o['importance']];
+        $project->orientations()->attach($orientations);
+        $project->tags()->attach($request->tags);
         return $project->fresh();
     }
 
-    public function addPreference(PreferenceFormRequest $request)
+
+
+
+
+    public function addPreference(Request $request)
     {
+        $request->validate([
+            'projects' => 'required|array|min:1|max:5',
+            'projects.*.id' => 'required|integer',
+            'projects.*.priority' => 'required|integer'
+        ]);
         $user = $request->user();
-        foreach ($request->projects_id as $i => $project_id) {
-            $preference = Preference::firstOrCreate([
-                'project_id' => $project_id,
+        foreach ($request->projects as $project) {
+            $preference = Preference::firstOrCreate([   //firstOrUpdate() ?
+                'project_id' => $project['id'],
                 'user_id' => $user->id,
             ]);
-            $preference->priority = $i + 1;
+            $preference->priority = $project['priority'];
             $preference->save();
         }
-        return $this->getPreffered($request);
+        return $user->preferences->load('project');
     }
 
-    public function removePreference(PreferenceFormRequest $request)
+    public function removePreference(Request $request)
     {
+        $request->validate([
+            'projects' => 'required|array|min:1|max:5',
+        ]);
         $user = $request->user();
-        foreach ($request->projects_id as $project_id) {
-            Preference::whereBelongsTo(Project::find($project_id))->whereBelongsTo($user)->delete();
-        }
-        return $this->getPreffered($request);
+        $user->preferences()->whereIn('project_id', $request->projects)->delete();
+        return $user->preferences->load('project');
     }
+
+
+
+
+
+
+
+
 
     public function addAttribution(Request $request)
     {
@@ -103,50 +110,5 @@ class ProjectController extends Controller
     {
         $request->validate(['user_id' => 'required']);
         Assignment::whereBelongsTo(User::find($request->user_id))->delete();
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Project  $project
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Project $project)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Project  $project
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Project $project)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Project  $project
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Project $project)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Project  $project
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Project $project)
-    {
-        //
     }
 }

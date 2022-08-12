@@ -10,6 +10,11 @@ class Orientation extends Model
     use HasFactory;
 
     protected $fillable = [
+        'acronym',
+        'faculty_acronym',
+        'department_acronym',
         'name',
+        'faculty_name',
+        'department_name'
     ];
 }

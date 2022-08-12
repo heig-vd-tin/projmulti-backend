@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Database\Seeders\OrientationSeeder;
-use Database\Seeders\RoleSeeder;
 use Database\Seeders\UserSeeder;
 use Database\Seeders\TagSeeder;
 
@@ -19,7 +18,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             OrientationSeeder::class,
-            RoleSeeder::class,
             TagSeeder::class,
             UserSeeder::class,
         ]);

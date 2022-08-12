@@ -21,13 +21,19 @@ use App\Models\User;
 
 Route::middleware('auth:api')->group(function () {
     Route::prefix('/project')->controller(ProjectController::class)->group(function () {
-        Route::get('/all', 'getAll')->can('viewAll', Project::class);
-        Route::get('/preffered', 'getPreffered');
+        Route::get('/all', 'getAll');
+        Route::get('/owned', 'getOwned');
+        Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');
 
-        Route::post('/submit', 'store');
+        Route::post('/submit', 'createProject');
+
         Route::post('/add-preference', 'addPreference');
         Route::post('/remove-preference', 'removePreference');
+
+
+
+
         Route::post('/add-attribution', 'addAttribution');
         Route::post('/remove-attribution', 'removeAttribution');
     });
@@ -39,10 +45,10 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::get('/orientation/all', function () {
-        return Orientation::all();
+        return Orientation::orderBy('faculty_acronym')->orderBy('acronym')->get();
     });
 
     Route::get('/tag/all', function () {
-        return Tag::all();
+        return Tag::orderBy('name')->get();
     });
 });

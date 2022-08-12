@@ -26,7 +26,7 @@ class ProjectFormRequest extends FormRequest
         return [
             'title' => 'required|max:100',
             'orientations' => 'required|array|min:1',
-            'orientations.*.name' => 'required',
+            'orientations.*.id' => 'required',
             'orientations.*.importance' => 'required|integer',
             'tags' => 'array|max:3',
         ];

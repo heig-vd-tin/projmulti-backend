@@ -15,7 +15,8 @@ class Project extends Model
         'owner_id',
     ];
 
-    protected $with = ['orientations', 'tags', 'preffered_users', 'assigned_users'];
+    //protected $with = ['orientations', 'tags', 'preferred_users', 'assigned_users'];
+    protected $with = ['orientations', 'tags'];
 
     public function orientations()
     {
@@ -37,7 +38,7 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'assignments');
     }
 
-    public function preffered_users()
+    public function preferred_users()
     {
         return $this->belongsToMany(User::class, 'preferences');
     }

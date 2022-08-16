@@ -99,13 +99,12 @@ class KeycloakGuard implements Guard
         if (!$user) {
             // Create user in BD if not exists
             $orientation = Orientation::where('name', $this->decodedToken->orientation)->firstOrFail();
-            $role = Role::where('name', $this->decodedToken->role)->firstOrFail();
             $user = User::create([
                 'firstname' => $this->decodedToken->given_name,
                 'lastname' => $this->decodedToken->family_name,
                 'email' => $this->decodedToken->email,
+                'role' => $this->decodedToken->role,
                 'orientation_id' => $orientation->id,
-                'role_id' => $role->id
             ]);
 
             $user->save();
@@ -151,7 +150,8 @@ class KeycloakGuard implements Guard
         try {
             $this->decodedToken = Token::decode($this->config['realm_public_key'], $this->request->bearerToken());
         } catch (\Exception $e) {
-            throw new TokenException($e->getMessage());
+            return false;
+            // throw new TokenException($e->getMessage());
         }
 
         if ($this->decodedToken) {

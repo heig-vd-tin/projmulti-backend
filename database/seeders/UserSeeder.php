@@ -50,5 +50,12 @@ class UserSeeder extends Seeder
             'role' => UserRole::STUDENT,
             'orientation_id' => 1
         ]);
+        User::create([
+            'firstname' => 'Rhoshandiatellyneshiaunneveshenk',
+            'lastname' => 'Wolfeschlegelsteinhausenbergerdorff',
+            'email' => 'Rhoshandiatellyneshiaunneveshenk.Wolfeschlegelsteinhausenbergerdorff@heig-vd.ch',
+            'role' => UserRole::STUDENT,
+            'orientation_id' => 1
+        ]);
     }
 }

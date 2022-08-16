@@ -17,4 +17,9 @@ class Orientation extends Model
         'faculty_name',
         'department_name'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

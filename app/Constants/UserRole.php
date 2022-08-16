@@ -6,14 +6,16 @@ final class UserRole
 {
     public const ADMIN = 'admin';
     public const PROFESSOR = 'professor';
-    public const ASSISTANT = 'assistant';
     public const STUDENT = 'student';
-    public const TRAINEE = 'trainee';
-    public const AllRoles = [
+
+    public const ALL_ROLES = [
         self::ADMIN,
         self::PROFESSOR,
-        self::ASSISTANT,
-        self::STUDENT,
-        self::TRAINEE
+        self::STUDENT
+    ];
+
+    public const CAN_CREATE = [
+        self::ADMIN,
+        self::PROFESSOR
     ];
 }

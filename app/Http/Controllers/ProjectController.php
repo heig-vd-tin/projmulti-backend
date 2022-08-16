@@ -18,19 +18,27 @@ class ProjectController extends Controller
 {
     public function getAll(Request $request)
     {
-        return Project::all();
+        $projects = Project::all();
+        if ($request->user()->role === UserRole::ADMIN)
+            return $projects->load(['preferred_users', 'assigned_users']);
+        else return $projects;
     }
 
     public function getOwned(Request $request)
     {
         $user = $request->user();
-        return Project::where('owner_id', $user->id)->get();
+        return Project::where('owner_id', $user->id)->get()->load('assigned_users');
     }
 
     public function getPreferred(Request $request)
     {
         $user = $request->user();
-        return $user->preferences->load('project');
+        $ret = $user->preferences->load('project')->map(function ($item) {
+            $a = $item->project;
+            $a->priority = $item->priority;
+            return $a;
+        });
+        return $ret;
     }
 
     public function getAssigned(Request $request)
@@ -53,10 +61,6 @@ class ProjectController extends Controller
         return $project->fresh();
     }
 
-
-
-
-
     public function addPreference(Request $request)
     {
         $request->validate([
@@ -66,14 +70,14 @@ class ProjectController extends Controller
         ]);
         $user = $request->user();
         foreach ($request->projects as $project) {
-            $preference = Preference::firstOrCreate([   //firstOrUpdate() ?
+            $preference = Preference::firstOrNew([
                 'project_id' => $project['id'],
                 'user_id' => $user->id,
             ]);
             $preference->priority = $project['priority'];
             $preference->save();
         }
-        return $user->preferences->load('project');
+        return $this->getPreferred($request);
     }
 
     public function removePreference(Request $request)
@@ -83,16 +87,8 @@ class ProjectController extends Controller
         ]);
         $user = $request->user();
         $user->preferences()->whereIn('project_id', $request->projects)->delete();
-        return $user->preferences->load('project');
+        return $this->getPreferred($request);
     }
-
-
-
-
-
-
-
-
 
     public function addAttribution(Request $request)
     {
@@ -109,6 +105,6 @@ class ProjectController extends Controller
     public function removeAttribution(Request $request)
     {
         $request->validate(['user_id' => 'required']);
-        Assignment::whereBelongsTo(User::find($request->user_id))->delete();
+        User::findOrFail($request->user_id)->assignments()->delete();
     }
 }

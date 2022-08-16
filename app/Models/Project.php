@@ -15,8 +15,10 @@ class Project extends Model
         'owner_id',
     ];
 
-    //protected $with = ['orientations', 'tags', 'preferred_users', 'assigned_users'];
-    protected $with = ['orientations', 'tags'];
+    protected $with = [
+        'orientations',
+        'tags'
+    ];
 
     public function orientations()
     {

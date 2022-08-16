@@ -31,6 +31,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected $with = [
+        'orientation',
+    ];
+
     public function orientation()
     {
         return $this->belongsTo(Orientation::class);
@@ -44,5 +48,20 @@ class User extends Authenticatable
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class, 'owner_id');
+    }
+
+    public function isAdmin()
+    {
+        return $this->role == UserRole::ADMIN;
+    }
+
+    public function canCreate()
+    {
+        return in_array($this->role, UserRole::CAN_CREATE);
     }
 }

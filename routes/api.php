@@ -26,20 +26,15 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');
 
-        Route::post('/submit', 'createProject');
-
+        Route::post('/submit', 'createProject')->can('createProject', Project::class);
         Route::post('/add-preference', 'addPreference');
         Route::post('/remove-preference', 'removePreference');
-
-
-
-
         Route::post('/add-attribution', 'addAttribution');
         Route::post('/remove-attribution', 'removeAttribution');
     });
 
     Route::prefix('/user')->controller(UserController::class)->group(function () {
-        Route::get('', 'getMyself');
+        Route::get('/me', 'getMyself');
         Route::get('/all', 'getAll');
         Route::get('/unassigned', 'getUnassigned');
     });

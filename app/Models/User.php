@@ -60,8 +60,18 @@ class User extends Authenticatable
         return $this->role == UserRole::ADMIN;
     }
 
-    public function canCreate()
+    public function isProfessor()
     {
-        return in_array($this->role, UserRole::CAN_CREATE);
+        return $this->role == UserRole::PROFESSOR;
+    }
+
+    public function isStudent()
+    {
+        return $this->role == UserRole::STUDENT;
+    }
+
+    public function isTeacher()
+    {
+        return in_array($this->role, UserRole::TEACHERS);
     }
 }

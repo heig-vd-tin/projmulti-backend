@@ -8,13 +8,13 @@ final class UserRole
     public const PROFESSOR = 'professor';
     public const STUDENT = 'student';
 
-    public const ALL_ROLES = [
+    public const ALL = [
         self::ADMIN,
         self::PROFESSOR,
         self::STUDENT
     ];
 
-    public const CAN_CREATE = [
+    public const TEACHERS = [
         self::ADMIN,
         self::PROFESSOR
     ];

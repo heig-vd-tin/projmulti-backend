@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Constants\UserRole;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -13,6 +12,11 @@ class ProjectPolicy
 
     public function createProject(User $user)
     {
-        return $user->canCreate();
+        return $user->isTeacher();
+    }
+
+    public function editProject(User $user, Project $project)
+    {
+        return $user->id === $project->owner_id;
     }
 }

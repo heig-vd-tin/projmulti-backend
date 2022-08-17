@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Models\Orientation;
-use App\Models\Project;
 use App\Models\Tag;
-use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +24,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');
 
-        Route::post('/submit', 'createProject')->can('createProject', Project::class);
+        Route::post('/create', 'createProject');
+        Route::post('/edit', 'editProject');
         Route::post('/add-preference', 'addPreference');
         Route::post('/remove-preference', 'removePreference');
         Route::post('/add-attribution', 'addAttribution');

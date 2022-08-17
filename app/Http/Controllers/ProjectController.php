@@ -3,15 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Http\Requests\ProjectFormRequest;
-use App\Http\Requests\PreferenceFormRequest;
 use App\Models\Assignment;
-use App\Models\Orientation;
 use App\Models\Preference;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Constants\UserRole;
 use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
@@ -19,7 +14,7 @@ class ProjectController extends Controller
     public function getAll(Request $request)
     {
         $projects = Project::all();
-        if ($request->user()->role === UserRole::ADMIN)
+        if ($request->user()->isAdmin())
             return $projects->load(['preferred_users', 'assigned_users']);
         else return $projects;
     }
@@ -47,8 +42,16 @@ class ProjectController extends Controller
         return Project::find($user->assignments->pluck('id'));
     }
 
-    public function createProject(ProjectFormRequest $request)
+    public function createProject(Request $request)
     {
+        $this->authorize('createProject', Project::class);
+        $request->validate([
+            'title' => 'required|max:100',
+            'orientations' => 'required|array|min:1',
+            'orientations.*.id' => 'required|integer',
+            'orientations.*.importance' => 'required|integer',
+            'tags' => 'array|max:3',
+        ]);
         $user = $request->user();
         $project = Project::create([
             'title' => $request->title,
@@ -58,7 +61,29 @@ class ProjectController extends Controller
         foreach ($request->orientations as $o) $orientations[$o['id']] = ['importance' => $o['importance']];
         $project->orientations()->attach($orientations);
         $project->tags()->attach($request->tags);
-        return $project->fresh();
+        return $project->fresh()->load('assigned_users');
+    }
+
+    public function editProject(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer',
+            'title' => 'required|max:100',
+            'orientations' => 'required|array|min:1',
+            'orientations.*.id' => 'required|integer',
+            'orientations.*.importance' => 'required|integer',
+            'tags' => 'array|max:3',
+        ]);
+        $project = Project::findOrFail($request->id);
+        $this->authorize('editProject', $project);
+        $project->update([
+            'title' => $request->title,
+            'description' => $request->description
+        ]);
+        foreach ($request->orientations as $o) $orientations[$o['id']] = ['importance' => $o['importance']];
+        $project->orientations()->sync($orientations);
+        $project->tags()->sync($request->tags);
+        return $project->fresh()->load('assigned_users');
     }
 
     public function addPreference(Request $request)

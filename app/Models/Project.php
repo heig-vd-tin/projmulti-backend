@@ -22,7 +22,7 @@ class Project extends Model
 
     public function orientations()
     {
-        return $this->belongsToMany(Orientation::class);
+        return $this->belongsToMany(Orientation::class)->withPivot('importance');
     }
 
     public function tags()

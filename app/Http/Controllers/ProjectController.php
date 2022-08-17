@@ -115,7 +115,7 @@ class ProjectController extends Controller
         return $this->getPreferred($request);
     }
 
-    public function addAttribution(Request $request)
+    public function addAssignment(Request $request)
     {
         $request->validate([
             'project_id' => 'required',
@@ -125,11 +125,14 @@ class ProjectController extends Controller
             ['user_id' => $request->user_id],
             ['project_id' => $request->project_id]
         );
+        return User::find($request->user_id);
     }
 
-    public function removeAttribution(Request $request)
+    public function removeAssignment(Request $request)
     {
         $request->validate(['user_id' => 'required']);
-        User::findOrFail($request->user_id)->assignments()->delete();
+        $user = User::findOrFail($request->user_id);
+        $user->assignments()->delete();
+        return $user;
     }
 }

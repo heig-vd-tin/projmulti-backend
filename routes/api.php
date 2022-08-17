@@ -28,8 +28,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/edit', 'editProject');
         Route::post('/add-preference', 'addPreference');
         Route::post('/remove-preference', 'removePreference');
-        Route::post('/add-attribution', 'addAttribution');
-        Route::post('/remove-attribution', 'removeAttribution');
+        Route::post('/add-assignment', 'addAssignment');
+        Route::post('/remove-assignment', 'removeAssignment');
     });
 
     Route::prefix('/user')->controller(UserController::class)->group(function () {

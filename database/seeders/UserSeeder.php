@@ -15,41 +15,41 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        User::create([
-            'firstname' => 'Admin',
-            'lastname' => 'Test',
-            'email' => 'admin.test@heig-vd.ch',
-            'role' => UserRole::ADMIN,
-            'orientation_id' => 1
-        ]);
-        User::create([
-            'firstname' => 'Professor1',
-            'lastname' => 'Test',
-            'email' => 'professor1.test@heig-vd.ch',
-            'role' => UserRole::PROFESSOR,
-            'orientation_id' => 1
-        ]);
-        User::create([
-            'firstname' => 'Professor2',
-            'lastname' => 'Test',
-            'email' => 'professor2.test@heig-vd.ch',
-            'role' => UserRole::PROFESSOR,
-            'orientation_id' => 1
-        ]);
-        User::create([
-            'firstname' => 'Student1',
-            'lastname' => 'Test',
-            'email' => 'student1.test@heig-vd.ch',
-            'role' => UserRole::STUDENT,
-            'orientation_id' => 1
-        ]);
-        User::create([
-            'firstname' => 'Student2',
-            'lastname' => 'Test',
-            'email' => 'student2.test@heig-vd.ch',
-            'role' => UserRole::STUDENT,
-            'orientation_id' => 1
-        ]);
+        // User::create([
+        //     'firstname' => 'Admin',
+        //     'lastname' => 'Test',
+        //     'email' => 'admin.test@heig-vd.ch',
+        //     'role' => UserRole::ADMIN,
+        //     'orientation_id' => 1
+        // ]);
+        // User::create([
+        //     'firstname' => 'Professor1',
+        //     'lastname' => 'Test',
+        //     'email' => 'professor1.test@heig-vd.ch',
+        //     'role' => UserRole::PROFESSOR,
+        //     'orientation_id' => 1
+        // ]);
+        // User::create([
+        //     'firstname' => 'Professor2',
+        //     'lastname' => 'Test',
+        //     'email' => 'professor2.test@heig-vd.ch',
+        //     'role' => UserRole::PROFESSOR,
+        //     'orientation_id' => 1
+        // ]);
+        // User::create([
+        //     'firstname' => 'Student1',
+        //     'lastname' => 'Test',
+        //     'email' => 'student1.test@heig-vd.ch',
+        //     'role' => UserRole::STUDENT,
+        //     'orientation_id' => 1
+        // ]);
+        // User::create([
+        //     'firstname' => 'Student2',
+        //     'lastname' => 'Test',
+        //     'email' => 'student2.test@heig-vd.ch',
+        //     'role' => UserRole::STUDENT,
+        //     'orientation_id' => 1
+        // ]);
         User::create([
             'firstname' => 'Rhoshandiatellyneshiaunneveshenk',
             'lastname' => 'Wolfeschlegelsteinhausenbergerdorff',

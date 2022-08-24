@@ -2,14 +2,15 @@
 
 namespace App\Providers\Keycloak;
 
+use App\Constants\UserRole;
 use App\Models\Orientation;
-use App\Models\Role;
 use App\Models\User;
 use App\Providers\Keycloak\Exceptions\TokenException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * source: https://github.com/robsontenorio/laravel-keycloak-guard
@@ -98,14 +99,15 @@ class KeycloakGuard implements Guard
 
         if (!$user) {
             // Create user in BD if not exists
-            $orientation = Orientation::where('name', $this->decodedToken->orientation)->firstOrFail();
-            $user = User::create([
+            $user = new User([
                 'firstname' => $this->decodedToken->given_name,
                 'lastname' => $this->decodedToken->family_name,
                 'email' => $this->decodedToken->email,
                 'role' => $this->decodedToken->role,
-                'orientation_id' => $orientation->id,
             ]);
+            if (!in_array($this->decodedToken->role, UserRole::TEACHERS)) {
+                $user->orientation_id = Orientation::where('acronym', $this->decodedToken->orientation)->firstOrFail()->id;
+            }
 
             $user->save();
         }

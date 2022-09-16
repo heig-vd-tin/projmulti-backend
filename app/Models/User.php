@@ -42,7 +42,7 @@ class User extends Authenticatable
 
     public function preferences()
     {
-        return $this->hasMany(Preference::class);
+        return $this->hasMany(Preference::class)->orderby('priority');
     }
 
     public function assignments()

@@ -35,6 +35,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('/user')->controller(UserController::class)->group(function () {
         Route::get('/me', 'getMyself');
         Route::get('/all', 'getAll');
+        Route::get('/all-students', 'getAllStudents');
         Route::get('/unassigned', 'getUnassigned');
     });
 

@@ -18,8 +18,13 @@ class UserController extends Controller
         return User::orderBy('lastname')->get();
     }
 
+    public function getAllStudents()
+    {
+        return User::where('role', UserRole::STUDENT)->orderBy('lastname')->get()->load('preferences');
+    }
+
     public function getUnassigned()
     {
-        return User::doesntHave('assignments')->where('role', UserRole::STUDENT)->orderBy('lastname')->get();
+        return User::doesntHave('assignments')->where('role', UserRole::STUDENT)->orderBy('lastname')->get()->load('preferences');
     }
 }

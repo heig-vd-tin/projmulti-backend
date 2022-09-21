@@ -43,6 +43,7 @@ class KeycloakGuard implements Guard
      */
     public function check(): bool
     {
+        $user = $this->provider->retrieveById(1);
         return !is_null($this->user());
     }
 
@@ -90,6 +91,11 @@ class KeycloakGuard implements Guard
      */
     public function validate(array $credentials = []): bool
     {
+        // tmz : bypass keycloak authentication
+        $user = $this->provider->retrieveById(1);
+        $this->setUser($user);
+        return true;
+
         if (!$this->decodedToken) {
             return false;
         }
@@ -150,16 +156,20 @@ class KeycloakGuard implements Guard
     private function authenticate()
     {
         try {
-            $this->decodedToken = Token::decode($this->config['realm_public_key'], $this->request->bearerToken());
+            $this->decodedToken = Token::decode($this->config['realm_public_key'], $this->request->bearerToken());            
         } catch (\Exception $e) {
             return false;
             // throw new TokenException($e->getMessage());
         }
-
+        
         if ($this->decodedToken) {
             $this->validate([
                 $this->config['user_provider_credential'] => $this->decodedToken->{$this->config['token_principal_attribute']}
             ]);
+        }
+        // tmz : disable keycloak authentication
+        else{
+            $this->validate();
         }
     }
 }

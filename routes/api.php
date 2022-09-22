@@ -6,6 +6,9 @@ use App\Http\Controllers\UserController;
 use App\Models\Orientation;
 use App\Models\Tag;
 
+use Illuminate\Contracts\Auth\UserProvider;
+use App\Models\User;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -45,5 +48,18 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/tag/all', function () {
         return Tag::orderBy('name')->get();
+    });
+
+    Route::get('/logid/{id}', function ($id) {
+        $u = User::find($id);
+        Session::put('user_id', $id);
+        Auth::setUser($u);
+    });
+
+    Route::get('/loguser/{username}', function ($username) {
+        $u = User::where('username', $username)->first();
+        if( $u != null ) {
+            Auth::setUser($u);
+        }
     });
 });

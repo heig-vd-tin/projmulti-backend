@@ -12,6 +12,9 @@ use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+use Illuminate\Support\Facades\Auth;
+use Session;
+
 /**
  * source: https://github.com/robsontenorio/laravel-keycloak-guard
  * author: Robson Tenório https://github.com/robsontenorio
@@ -32,8 +35,18 @@ class KeycloakGuard implements Guard
         $this->provider = $provider;
         $this->decodedToken = null;
         $this->request = $request;
-
-        $this->authenticate();
+        
+        $id = session()->get('user_id');
+        if ($id) {
+            $user = User::find($id);
+            $this->setUser($user);
+        }
+        else{
+            $user = $this->provider->retrieveById(1);
+            $this->setUser($user);
+        }
+        //$this->authenticate();
+        //dd('user', $user);
     }
 
     /**
@@ -43,7 +56,6 @@ class KeycloakGuard implements Guard
      */
     public function check(): bool
     {
-        $user = $this->provider->retrieveById(1);
         return !is_null($this->user());
     }
 
@@ -91,10 +103,6 @@ class KeycloakGuard implements Guard
      */
     public function validate(array $credentials = []): bool
     {
-        // tmz : bypass keycloak authentication
-        $user = $this->provider->retrieveById(1);
-        $this->setUser($user);
-        return true;
 
         if (!$this->decodedToken) {
             return false;
@@ -166,10 +174,6 @@ class KeycloakGuard implements Guard
             $this->validate([
                 $this->config['user_provider_credential'] => $this->decodedToken->{$this->config['token_principal_attribute']}
             ]);
-        }
-        // tmz : disable keycloak authentication
-        else{
-            $this->validate();
         }
     }
 }

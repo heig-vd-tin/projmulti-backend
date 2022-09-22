@@ -50,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
         return Tag::orderBy('name')->get();
     });
 
+    // tmz : login debug
     Route::get('/logid/{id}', function ($id) {
         $u = User::find($id);
         Session::put('user_id', $id);

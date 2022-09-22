@@ -37,17 +37,15 @@ class KeycloakGuard implements Guard
         $this->request = $request;
 
         // tmz : disable keycloak for local development
-        $id = session()->get('user_id');
-        if ($id) {
-            $user = User::find($id);
+        $id = env('ID_USER', null);
+        if( env('APP_DEBUG', false) && $id){
+            $user = $this->provider->retrieveById($id);
             $this->setUser($user);
         }
         else{
-            $user = $this->provider->retrieveById(1);
-            $this->setUser($user);
+            $this->authenticate();
+            dd('user', $user);
         }
-        //$this->authenticate();
-        //dd('user', $user);
     }
 
     /**

@@ -16,13 +16,15 @@ class PreferenceSeeder extends Seeder
      */
     public function run()
     {
-        $users = User::where('id', '>', 5)->get();
-        foreach ($users as $user) {
+        $students = User::where('role', 'like', 'student')->get();
+        foreach ($students as $student) {
+            
             $projects = Project::all()->random(5);
+
             foreach ($projects as $i=>$project) {
                 $preference = Preference::firstOrNew([
                     'project_id' => $project->id,
-                    'user_id' => $user->id,
+                    'user_id' => $student->id,
                 ]);
                 $preference->priority = 5 - $i;
                 $preference->save();

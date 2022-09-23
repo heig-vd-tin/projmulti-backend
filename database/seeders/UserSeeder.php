@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Constants\UserRole;
 
+use App\Models\Orientation;
+
 class UserSeeder extends Seeder
 {
     private $count = 50;
@@ -17,6 +19,7 @@ class UserSeeder extends Seeder
     public function run()
     {
         //Keycloak bound users
+        /*
         User::create([
             'firstname' => 'Admin',
             'lastname' => 'Test',
@@ -48,8 +51,39 @@ class UserSeeder extends Seeder
             'email' => 'student2.test@heig-vd.ch',
             'role' => UserRole::STUDENT,
             'orientation_id' => 1
-        ]);
+        ]);*/
+        
         //Fake users
-        User::factory()->count($this->count)->create();
+        //User::factory()->count($this->count)->create();
+
+        //Fake users admin
+        User::factory()
+            ->count(2)
+            ->create([
+                'role' => UserRole::ADMIN,
+                'orientation_id' => null
+        ]);
+
+        //Fake users professor
+        User::factory()
+            ->count(10)
+            ->create([
+                'role' => UserRole::PROFESSOR,
+                'orientation_id' => null
+        ]);
+
+        // can be use to create fake users with a specific orientation
+        $nbr_orientation = Orientation::count();
+
+        //Fake users student
+        User::factory()
+            ->count(70)
+            ->state(new Sequence(
+                fn ($sequence) => [
+                    'orientation_id' => Orientation::all()->random(),
+                    'role' => UserRole::STUDENT
+                ],
+            ))
+            ->create();        
     }
 }

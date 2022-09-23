@@ -19,6 +19,8 @@ class CreateOrientationProjectTable extends Migration
             $table->unsignedBigInteger('orientation_id');
             $table->unsignedBigInteger('project_id');
 
+            $table->unique(['orientation_id', 'project_id']);
+
             $table->foreign('orientation_id')->references('id')->on('orientations');
             $table->foreign('project_id')->references('id')->on('projects');
         });

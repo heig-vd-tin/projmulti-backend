@@ -18,6 +18,8 @@ class CreateProjectTagTable extends Migration
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('tag_id');
 
+            $table->unique(['project_id', 'tag_id']);
+
             $table->foreign('project_id')->references('id')->on('projects');
             $table->foreign('tag_id')->references('id')->on('tags');
         });

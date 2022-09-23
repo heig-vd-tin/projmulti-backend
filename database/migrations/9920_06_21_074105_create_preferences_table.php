@@ -20,6 +20,8 @@ class CreatePreferencesTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->integer('priority')->default(0);
 
+            $table->unique(['project_id', 'user_id', 'priority']);
+
             $table->foreign('project_id')->references('id')->on('projects');
             $table->foreign('user_id')->references('id')->on('users');
         });

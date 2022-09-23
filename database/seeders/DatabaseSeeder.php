@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             OrientationSeeder::class,
+            DomainSeeder::class,
             TagSeeder::class,
             UserSeeder::class,
             ProjectSeeder::class,

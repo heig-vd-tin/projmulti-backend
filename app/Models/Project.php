@@ -16,13 +16,13 @@ class Project extends Model
     ];
 
     protected $with = [
-        'orientations',
+        'domains',
         'tags'
     ];
 
-    public function orientations()
+    public function domains()
     {
-        return $this->belongsToMany(Orientation::class)->withPivot('importance')->orderByDesc('importance');
+        return $this->belongsToMany(Domain::class)->withPivot('importance')->orderByDesc('importance');
     }
 
     public function tags()

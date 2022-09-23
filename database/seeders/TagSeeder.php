@@ -22,7 +22,6 @@ class TagSeeder extends Seeder
             ['name' => '#Math'],
             ['name' => '#Thermic'],
             ['name' => '#Mecanical'],
-            ['name' => '#Micro mecanical'],
             ['name' => '#Flow'],
         ];
         foreach ($tags as $tag) {

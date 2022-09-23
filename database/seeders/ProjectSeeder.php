@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Project;
+use App\Models\User;
+use App\Models\Domain;
 
 class ProjectSeeder extends Seeder
 {
@@ -18,42 +20,27 @@ class ProjectSeeder extends Seeder
         $nbr_prof = User::where('role', 'like', 'professor')->count();
         $profs = User::where('role', 'like', 'professor')->get();
 
-        $nbr_orientations = Orientation::count();
+        $nbr_domains = Domain::count();
 
         $cpt_proj = 0;
         foreach ($profs as $prof) {
             for ($i = 0; $i < $this->count; $i++) {
-                $project = Project::firstOrNew([
+                $project = Project::create([
                     'title' => 'Project ' . $cpt_proj,
                     'description' => 'Description of project ' . $cpt_proj,
                     'owner_id' => $prof->id,
                 ]);
 
-                $nbr_orient = rand(3, 6);
-                $orientations = Orientation::all()->random($nbr_orient);
+                $nbr = rand(3, $nbr_domains);
+                $domains = Domain::all()->random($nbr);
                 
-                foreach ($orientations as $orientation) {
-                    $project->orientations()->attach($orientation->id, ['importance' => rand(1, 5)]);
+                foreach ($domains as $d) {
+                    $project->domains()->attach($d->id, ['importance' => rand(1, 3)]);
                 }
 
                 $project->save();
                 $cpt_proj++;
             }
         }
-
-        /*
-        for ($i = 1; $i <= $this->count; $i++) {
-            $project = Project::create([
-                'title' => 'Project' . $i,
-                'description' => 'Ceci est une description...',
-                'owner_id' => 1
-            ]);
-
-            $project->orientations()->attach([
-                1 => ['importance' => rand(1, 3)],
-                2 => ['importance' => rand(1, 3)],
-                3 => ['importance' => rand(1, 3)]
-            ]);
-        }*/
     }
 }

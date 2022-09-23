@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Constants\UserRole;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 
 use App\Models\Orientation;
 

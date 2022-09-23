@@ -41,7 +41,7 @@ class OrientationSeeder extends Seeder
                 'name' => 'Thermotronique', 'faculty_name' => 'Energie et techniques environnementales'
             ],
 
-            [
+            /*[
                 'acronym' => 'IGIS', 'faculty_acronym' => 'IGIS', 'department_acronym' => 'TIN',
                 'name' => 'Ingénierie et gestion industrielles - Tronc commun', 'faculty_name' => 'Ingénierie et gestion industrielles'
             ],
@@ -52,7 +52,7 @@ class OrientationSeeder extends Seeder
             [
                 'acronym' => 'IGQP', 'faculty_acronym' => 'IGIS', 'department_acronym' => 'TIN',
                 'name' => 'Qualité et performances industrielles', 'faculty_name' => 'Ingénierie et gestion industrielles'
-            ],
+            ],*/
 
             [
                 'acronym' => 'MI', 'faculty_acronym' => 'MTEC', 'department_acronym' => 'TIN',

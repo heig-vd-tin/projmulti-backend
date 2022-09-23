@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AssignmentController;
 use App\Models\Orientation;
 use App\Models\Tag;
 
@@ -40,6 +41,12 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/all', 'getAll');
         Route::get('/all-students', 'getAllStudents');
         Route::get('/unassigned', 'getUnassigned');
+    });
+
+    Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
+        Route::get('/check', 'assign');
+        Route::get('/all', 'assign');
+        Route::get('/{id}', 'get');
     });
 
     Route::get('/orientation/all', function () {

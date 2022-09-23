@@ -19,6 +19,12 @@ class CreateProjectsTable extends Migration
             $table->string('title', 100);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('owner_id');
+            $table->integer('score')->default(0);
+            $table->boolean('miss_student')->default(true);
+            $table->boolean('selected')->default(false);
+
+            $table->integer('nb_student')->default(0); // tmz : for debub
+            $table->integer('nb_domain')->default(0); // tmz : for debub
 
             $table->foreign('owner_id')->references('id')->on('users');
         });

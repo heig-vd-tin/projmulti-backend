@@ -13,6 +13,8 @@ class Project extends Model
         'title',
         'description',
         'owner_id',
+        'miss_student',
+        'score'
     ];
 
     protected $with = [

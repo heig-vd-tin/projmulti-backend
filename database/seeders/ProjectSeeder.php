@@ -28,6 +28,14 @@ class ProjectSeeder extends Seeder
                     'description' => 'Description of project ' . $cpt_proj,
                     'owner_id' => $prof->id,
                 ]);
+
+                $nbr_orient = rand(1, $nbr_orientations);
+                $orientations = Orientation::all()->random($nbr_orient);
+                
+                foreach ($orientations as $orientation) {
+                    $project->orientations()->attach($orientation->id);
+                }
+
                 $project->save();
                 $cpt_proj++;
             }

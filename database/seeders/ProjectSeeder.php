@@ -29,11 +29,11 @@ class ProjectSeeder extends Seeder
                     'owner_id' => $prof->id,
                 ]);
 
-                $nbr_orient = rand(1, $nbr_orientations);
+                $nbr_orient = rand(3, 6);
                 $orientations = Orientation::all()->random($nbr_orient);
                 
                 foreach ($orientations as $orientation) {
-                    $project->orientations()->attach($orientation->id);
+                    $project->orientations()->attach($orientation->id, ['importance' => rand(1, 5)]);
                 }
 
                 $project->save();
@@ -41,6 +41,7 @@ class ProjectSeeder extends Seeder
             }
         }
 
+        /*
         for ($i = 1; $i <= $this->count; $i++) {
             $project = Project::create([
                 'title' => 'Project' . $i,
@@ -53,6 +54,6 @@ class ProjectSeeder extends Seeder
                 2 => ['importance' => rand(1, 3)],
                 3 => ['importance' => rand(1, 3)]
             ]);
-        }
+        }*/
     }
 }

@@ -137,6 +137,93 @@ class AssignmentController extends Controller
         }
     }
 
+    function reset_project(){
+        $projects = Project::all();
+        foreach ($projects as $project) {
+            $project->selected = false;
+            $project->nb_student = 0;
+            $project->nb_domain = 0;
+            $project->score = 0;
+            $project->miss_student = true;
+            $project->save();
+        }
+    }
+
+    function select_project(){
+        $this->reset_project();
+
+        $nb_project = 0;
+        $nb_student_per_project = 5;
+        $nb_prj_need = intdiv(User::where('role', 'like', 'student')->count(), $nb_student_per_project);
+
+        $matches = DB::table('matches')
+            ->select('project_id', DB::raw('count(*) as nb'))
+            ->where('priority', '<=', 3)
+            ->groupBy('project_id')
+            ->orderBy('nb')
+            ->get();
+
+        foreach ($matches as $match) {
+            $project_id = $match->project_id;
+            $project = Project::find($project_id);
+
+            $prof_have_project = Project::where('selected', '=', true)
+                ->where('owner_id', $project->owner_id)
+                ->count();
+
+            if($prof_have_project == 0){
+                $project->selected = true;
+                $project->nb_student = $match->nb;
+                $project->save();
+                $nb_project++;
+            }
+        }
+
+        $prof_without_project = User::where('role', 'like', 'professor')
+            ->whereNotIn('id', function($query){
+                $query->select('owner_id')->from('projects')->where('selected', '=', true);
+            })->get();
+
+        foreach ($prof_without_project as $prof) {
+            $match_prj = DB::table('matches')
+                ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
+                ->join('projects', 'matches.project_id', '=', 'projects.id')
+                ->where('owner_id', '=', $prof->id)
+                ->groupBy('project_id')
+                ->orderBy('nb')
+                ->first();
+
+            $project = Project::find($match_prj->project_id);
+            if($project != null){
+                $project->selected = true;
+                $project->nb_student = $match_prj->nb;
+                $project->save();
+                $nb_project++;
+            }
+        }
+        
+        $match_free_prj = DB::table('matches')
+                ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
+                ->join('projects', 'matches.project_id', '=', 'projects.id')
+                ->where('selected', '=', false)
+                ->groupBy('project_id')
+                ->orderBy('nb')
+                ->get();
+
+        foreach ($match_free_prj as $match) {
+            if( $nb_prj_need <= $nb_project ){
+                break;
+            }
+
+            $project = Project::find($match->project_id);
+            
+            $project->selected = true;
+            $project->nb_student = $match->nb;
+            $project->save();
+            $nb_project++;
+        }
+    }
+
     function calcul_score(){
         $projects = Project::all();
 
@@ -154,12 +241,17 @@ class AssignmentController extends Controller
 
     public function assign(Request $request)
     {
+        //$this->fill_match_table();
+        //return $this->getAll($request);
+        $this->select_project();
+        return $this->getAll($request);
+
         //$this->authorize('assign', Assignment::class);
         $this->first_assign();
         $this->calcul_score();
         $this->need_full();
 
-        $this->fill_match_table();
+        
 
         return $this->getAll($request);
     }

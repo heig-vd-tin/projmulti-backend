@@ -18,8 +18,9 @@ class CreateAssignmentsTable extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
+            $table->integer('level')->default(0);
 
-            $table->unique(['project_id', 'user_id']);
+            $table->unique(['project_id', 'user_id', 'level']);
 
             $table->foreign('project_id')->references('id')->on('projects');
             $table->foreign('user_id')->references('id')->on('users');

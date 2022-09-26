@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasMany(Assignment::class);
     }
 
+    public function match_projects()
+    {
+        return $this->belongsToMany(Project::class, 'matches');
+    }
+
     public function projects()
     {
         return $this->hasMany(Project::class, 'owner_id');

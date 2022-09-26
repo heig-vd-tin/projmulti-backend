@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Assignment;
 use App\Models\Preference;
+use App\Models\Match;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -26,32 +28,50 @@ class AssignmentController extends Controller
         return $assignment->load(['user', 'project']);
     }
 
-    function get_orientation_from_domain($domain)
+    function get_orientation_from_domain($domain, $enlarge)
     {
         switch ($domain->id){
             case '1': // meca
                 return [7, 8];
             case '2': // electronic
-                return [2];
+                return $enlarge ? [2,7,3] : [2];
             case '3': // electric
-                return [2,3];
+                return $enlarge ? [2,3,7] : [2,3];
             case '4': // Thermic
-                return [4,5,6];
-            case '5': // Programming
-                return [1];
+                return [5,6];
+            case '5': // Energy
+                return [4];
+            case '6': // Programming
+                return $enlarge ? [1,2,7] : [1];
         }
         return [];
     }
 
-    function nbr_project_match($user){
-        $projects = Project::inRandomOrder()->get();
+    function fill_match_table(){
+        $projects = Project::all();
+
+        Match::truncate();
 
         foreach ($projects as $project) {
-            $match_orientation = $this->get_orientation_from_domain($project->domains);
-            $pu = $project->preferred_users()
-                    ->wherein('orientation_id', $match_orientation )
-                    ->where('priority', '=', $priority)
-                    ->get();
+            foreach ($project->domains as $domain){
+                $match_orientation = $this->get_orientation_from_domain($domain, false);
+                $users = $project->preferred_users()
+                        ->wherein('orientation_id', $match_orientation )
+                        ->get();
+                
+                foreach ($users as $user){
+                    $exist = $project->match_users()->where('user_id', '=', $user->id)->count();
+                    if($exist > 0){
+                        //dd($project, $user, $user->match_projects()->get());
+                    }
+                    else{
+                        $p = Preference::where('project_id', '=', $project->id)
+                        ->where('user_id', '=', $user->id)->first()->priority;
+
+                        $user->match_projects()->attach($project, ['priority' => $p]);
+                    }
+                }
+            }
         }
     }
 
@@ -59,23 +79,34 @@ class AssignmentController extends Controller
         $max_priority = Preference::max('priority');
 
         $users = User::all();
-        $projects = Project::inRandomOrder()->get();
+
+        $project_ids = DB::table('matches')
+            ->select('project_id', DB::raw('count(*) as nb'))
+            ->where('priority', '<', 3)
+            ->groupBy('project_id')
+            ->orderBy('nb')
+            ->get();
 
         Assignment::truncate();
 
-        foreach ($projects as $project) {
+        foreach ($project_ids as $p_id) {
+            $prj = Project::find($p_id->project_id);
+            //dd($prj);
+            $stds = Match::where('project_id', '=', $p_id->project_id)->get();
+            dd($prj, $stds, $stds[0]->user()->get());
+
             $needs = $project->domains;
             foreach ($needs as $need) {
 
                 $find = false;
                 for ($priority = 1; !$find && $priority<=$max_priority; $priority++){
-                    $match_orientation = $this->get_orientation_from_domain($need);
+                    $match_orientation = $this->get_orientation_from_domain($need, false);
                     // list of student match need
                     $students = $project->preferred_users()
                         ->wherein('orientation_id', $match_orientation )
                         ->where('priority', '=', $priority)
                         ->get();
-                        dd($students);
+                        //dd($students);
                     // assign only one project to one student
                     foreach($students as $s){
                         if( $s->assignments()->count() == 0 ){
@@ -127,6 +158,8 @@ class AssignmentController extends Controller
         $this->first_assign();
         $this->calcul_score();
         $this->need_full();
+
+        $this->fill_match_table();
 
         return $this->getAll($request);
     }

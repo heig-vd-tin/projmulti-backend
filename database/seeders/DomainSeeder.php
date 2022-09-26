@@ -28,6 +28,9 @@ class DomainSeeder extends Seeder
                 'name' => 'Thermic'
             ],
             [
+                'name' => 'Energy'
+            ],
+            [
                 'name' => 'Programming'
             ],
         ];

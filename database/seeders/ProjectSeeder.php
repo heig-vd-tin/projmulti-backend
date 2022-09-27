@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\Domain;
+use Faker\Generator;
+use Illuminate\Container\Container;
 
 class ProjectSeeder extends Seeder
 {
@@ -17,6 +19,8 @@ class ProjectSeeder extends Seeder
      */
     public function run()
     {
+        $faker = Container::getInstance()->make(Generator::class);
+
         $nbr_prof = User::where('role', 'like', 'professor')->count();
         $profs = User::where('role', 'like', 'professor')->get();
 
@@ -27,7 +31,7 @@ class ProjectSeeder extends Seeder
             for ($i = 0; $i < $this->count; $i++) {
                 $project = Project::create([
                     'title' => 'Project ' . $cpt_proj,
-                    'description' => 'Description of project ' . $cpt_proj,
+                    'description' => $faker->realText( rand(20, 800) ), //'Description of project ' . $cpt_proj,
                     'owner_id' => $prof->id,
                 ]);
 

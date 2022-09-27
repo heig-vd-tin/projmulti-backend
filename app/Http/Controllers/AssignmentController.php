@@ -351,8 +351,8 @@ class AssignmentController extends Controller
 
     public function assign(Request $request)
     {        
-        //$this->fill_match_table();
-        //$this->select_project();
+        $this->fill_match_table();
+        $this->select_project();
 
         $this->assign_level(1);
         $this->assign_level(2);

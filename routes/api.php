@@ -5,6 +5,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssignmentController;
 use App\Models\Orientation;
+use App\Models\Domain;
 use App\Models\Tag;
 
 use Illuminate\Contracts\Auth\UserProvider;
@@ -52,6 +53,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/orientation/all', function () {
         return Orientation::orderBy('faculty_acronym')->orderBy('acronym')->get();
+    });
+
+    Route::get('/domain/all', function () {
+        return Domain::all();
     });
 
     Route::get('/tag/all', function () {

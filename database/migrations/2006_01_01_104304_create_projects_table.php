@@ -19,6 +19,7 @@ class CreateProjectsTable extends Migration
             $table->string('title', 100);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('owner_id');
+            $table->boolean('is_active')->default(false);
             $table->integer('score')->default(0);
             $table->boolean('miss_student')->default(true);
             $table->boolean('selected')->default(false);

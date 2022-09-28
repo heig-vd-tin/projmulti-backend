@@ -45,7 +45,7 @@ class ProjectSeeder extends Seeder
                     $project->domains()->attach($d->id, ['importance' => rand(1, 3)]);
                 }
 
-                $tags = Tag::all()->random(rand(2, 6));
+                $tags = Tag::all()->random(rand(1, 3));
                 $project->tags()->attach($tags);
 
                 $project->save();

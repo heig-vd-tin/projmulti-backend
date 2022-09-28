@@ -16,22 +16,34 @@ class DomainSeeder extends Seeder
     {
         $datas = [
             [
-                'name' => 'Mecanic'
+                'id' => 1,
+                'name' => 'Mecanic',
+                'icon' => 'mdi-cog-outline',
             ],
             [
-                'name' => 'Electronic'
+                'id' => 2,
+                'name' => 'Electronic',
+                'icon' => 'mdi-cpu-64-bit',
             ],
             [
-                'name' => 'Electricity'
+                'id' => 3,
+                'name' => 'Electricity',
+                'icon' => 'mdi-lightning-bolt-circle',
             ],
             [
-                'name' => 'Thermic'
+                'id' => 4,
+                'name' => 'Thermic',
+                'icon' => 'mdi-hydraulic-oil-temperature',
             ],
             [
-                'name' => 'Energy'
+                'id' => 5,
+                'name' => 'Energy',
+                'icon' => 'mdi-home-city-outline',
             ],
             [
-                'name' => 'Programming'
+                'id' => 6,
+                'name' => 'Programming',
+                'icon' => 'mdi-laptop',
             ],
         ];
         foreach ($datas as $data) {

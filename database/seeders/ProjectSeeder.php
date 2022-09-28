@@ -12,6 +12,7 @@ use Illuminate\Container\Container;
 class ProjectSeeder extends Seeder
 {
     private $count = 2; // number of projects by prof
+    private $nbr_domains = 4; // number max of domains by project
     /**
      * Run the database seeds.
      *
@@ -24,7 +25,7 @@ class ProjectSeeder extends Seeder
         $nbr_prof = User::where('role', 'like', 'professor')->count();
         $profs = User::where('role', 'like', 'professor')->get();
 
-        $nbr_domains = Domain::count();
+        //$nbr_domains = Domain::count();
 
         $cpt_proj = 0;
         foreach ($profs as $prof) {
@@ -35,7 +36,7 @@ class ProjectSeeder extends Seeder
                     'owner_id' => $prof->id,
                 ]);
 
-                $nbr = rand(3, $nbr_domains);
+                $nbr = rand(2, $this->nbr_domains);
                 $domains = Domain::all()->random($nbr);
                 
                 foreach ($domains as $d) {

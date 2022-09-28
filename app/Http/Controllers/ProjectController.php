@@ -47,19 +47,22 @@ class ProjectController extends Controller
         $this->authorize('createProject', Project::class);
         $request->validate([
             'title' => 'required|max:100',
-            'orientations' => 'required|array|min:1',
-            'orientations.*.id' => 'required|integer',
-            'orientations.*.importance' => 'required|integer',
+            'short_description' => 'required|max:100',
+            'domains' => 'required|array|min:1',
+            'domains.*.id' => 'required|integer',
+            'domains.*.importance' => 'required|integer',
             'tags' => 'array|max:3',
         ]);
         $user = $request->user();
         $project = Project::create([
             'title' => $request->title,
             'description' => $request->description,
-            'owner_id' => $user->id,
+            'short_description' => $request->short_description,
+            'owner_id' => $user->id
         ]);
-        foreach ($request->orientations as $o) $orientations[$o['id']] = ['importance' => $o['importance']];
-        $project->orientations()->attach($orientations);
+        foreach ($request->domains as $o) $domains[$o['id']] = ['importance' => $o['importance']];
+            $project->domains()->attach($domains);
+
         $project->tags()->attach($request->tags);
         return $project->fresh()->load('assigned_users');
     }
@@ -69,19 +72,20 @@ class ProjectController extends Controller
         $request->validate([
             'id' => 'required|integer',
             'title' => 'required|max:100',
-            'orientations' => 'required|array|min:1',
-            'orientations.*.id' => 'required|integer',
-            'orientations.*.importance' => 'required|integer',
+            'domains' => 'required|array|min:1',
+            'domains.*.id' => 'required|integer',
+            'domains.*.importance' => 'required|integer',
             'tags' => 'array|max:3',
         ]);
         $project = Project::findOrFail($request->id);
         $this->authorize('editProject', $project);
         $project->update([
             'title' => $request->title,
-            'description' => $request->description
+            'description' => $request->description,
+            'short_description' => $request->short_description
         ]);
-        foreach ($request->orientations as $o) $orientations[$o['id']] = ['importance' => $o['importance']];
-        $project->orientations()->sync($orientations);
+        foreach ($request->domains as $o) $domains[$o['id']] = ['importance' => $o['importance']];
+        $project->domains()->sync($domains);
         $project->tags()->sync($request->tags);
         return $project->fresh()->load('assigned_users');
     }

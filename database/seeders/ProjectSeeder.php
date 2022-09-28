@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\Domain;
+use App\Models\Tag;
 use Faker\Generator;
 use Illuminate\Container\Container;
 
@@ -43,6 +44,9 @@ class ProjectSeeder extends Seeder
                 foreach ($domains as $d) {
                     $project->domains()->attach($d->id, ['importance' => rand(1, 3)]);
                 }
+
+                $tags = Tag::all()->random(rand(2, 6));
+                $project->tags()->attach($tags);
 
                 $project->save();
                 $cpt_proj++;

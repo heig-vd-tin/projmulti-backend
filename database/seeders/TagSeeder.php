@@ -23,6 +23,10 @@ class TagSeeder extends Seeder
             ['name' => '#Thermic'],
             ['name' => '#Mecanical'],
             ['name' => '#Flow'],
+            ['name' => '#Optic'],
+            ['name' => '#Simulation'],
+            ['name' => '#Control'],
+            ['name' => '#IoT'],
         ];
         foreach ($tags as $tag) {
             Tag::create($tag);

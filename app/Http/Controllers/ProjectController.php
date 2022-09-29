@@ -115,7 +115,7 @@ class ProjectController extends Controller
             'projects' => 'required|array|min:1|max:5',
         ]);
         $user = $request->user();
-        $user->preferences()->whereIn('project_id', $request->projects)->delete();
+        $user->preferences()->where('project_id', $request->projects[0])->delete();
         return $this->getPreferred($request);
     }
 

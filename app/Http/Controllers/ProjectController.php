@@ -15,7 +15,7 @@ class ProjectController extends Controller
     {
         $projects = Project::all();
         if ($request->user()->isAdmin())
-            return $projects->load(['preferred_users', 'assigned_users']);
+            return $projects->load(['preferred_users', 'assigned_users', 'matched_users']);
         else return $projects;
     }
 
@@ -65,6 +65,13 @@ class ProjectController extends Controller
 
         $project->tags()->attach($request->tags);
         return $project->fresh()->load('assigned_users');
+    }
+
+    public function selectProject(Request $request){
+        $project = Project::findOrFail($request->id);
+        $project->selected = $request->selected;
+        $project->save();
+        return $project->fresh();
     }
 
     public function editProject(Request $request)

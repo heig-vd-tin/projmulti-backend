@@ -43,9 +43,9 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'assignments');
     }
 
-    public function match_users()
+    public function matched_users()
     {
-        return $this->belongsToMany(User::class, 'matches');
+        return $this->belongsToMany(User::class, 'matches')->withPivot(['priority', 'version']);
     }
 
     public function preferred_users()

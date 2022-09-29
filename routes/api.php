@@ -28,6 +28,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/owned', 'getOwned');
         Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');
+        
+        Route::post('/select', 'selectProject');
 
         Route::post('/create', 'createProject');
         Route::post('/edit', 'editProject');
@@ -45,8 +47,8 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
-        Route::get('/check', 'assign');
-        Route::get('/all', 'assign');
+        Route::get('/select-project', 'selectProject');
+        Route::get('/auto-affect', 'autoAffect');
         Route::get('/rand', 'rand');
         Route::get('/{id}', 'get');
     });

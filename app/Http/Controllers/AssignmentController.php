@@ -60,7 +60,7 @@ class AssignmentController extends Controller
                         ->get();
                 
                 foreach ($users as $user){
-                    $exist = $project->match_users()->where('user_id', '=', $user->id)->count();
+                    $exist = $project->matched_users()->where('user_id', '=', $user->id)->count();
                     if($exist > 0){
                         //dd($project, $user, $user->match_projects()->get());
                     }
@@ -144,50 +144,64 @@ class AssignmentController extends Controller
             foreach ($needs as $i=>$n){
                 $orientations = $this->get_orientation_from_domain($n, $level != 1 );
                 
-                $assigned_needs = DB::table('assignments')
-                    ->join('users', 'user_id', '=', 'users.id')
-                    ->where('project_id', '=', $project->id)
-                    ->wherein('users.orientation_id', $orientations)
-                    ->get();
-                    //->pluck('orientation_id');
-
-                if( $assigned_needs->count() > 0){
-                    continue;
-                    dd($n, $assigned_needs, $orientations, $project);
-                }
-               
-                switch($level){
-                    case 0:
-                    case 1:
-                        $priority = 2;
-                        break;
-                    case 2:
-                        $priority = 3;
-                        break;
-                    case 3:
-                        $priority = 4;
-                        break;
-                }
-                $matches = DB::table('matches')
-                    ->join('projects', 'matches.project_id', '=', 'projects.id')
-                    ->join('users', 'matches.user_id', '=', 'users.id')
-                    ->where('project_id', '=', $project->id)
-                    ->where('priority', '<=', $priority)
-                    ->wherein('users.orientation_id', $orientations)
-                    ->orderBy('priority')
-                    ->get();
-                
-                if( $matches->count() > 0 ){
-                    //dd($matches);
-                    foreach($matches as $m){
-                        $std = User::find($m->user_id);
-                        //dd($matches, $m, $std);
-                        if( $std->assignments()->count() == 0 ){
-                            $project->assigned_users()->attach($std, ['level' => $level]);
-                            break;
+                foreach ($orientations as $o){
+                    $nbr_usr_need = 0;
+                    foreach ($needs as $n){
+                        $test = $this->get_orientation_from_domain($n, $level != 1 );
+                        if (in_array($o, $test)){
+                            $nbr_usr_need++;
                         }
-                        else{
-                            //dd($s);
+                    }
+
+                    $assigned_needs = DB::table('assignments')
+                        ->join('users', 'user_id', '=', 'users.id')
+                        ->where('project_id', '=', $project->id)
+                        ->wherein('users.orientation_id', $orientations)
+                        ->get();
+
+                    if( $assigned_needs->count() >= $nbr_usr_need){
+                        continue;
+                        dd($n, $assigned_needs, $orientations, $project);
+                    }
+               
+                    switch($level){
+                        case 0:
+                        case 1:
+                            $priority = 2;
+                            break;
+                        case 2:
+                            $priority = 3;
+                            break;
+                        case 3:
+                            $priority = 4;
+                            break;           
+                    }
+
+                    $matches = DB::table('matches')
+                        ->join('projects', 'matches.project_id', '=', 'projects.id')
+                        ->join('users', 'matches.user_id', '=', 'users.id')
+                        ->where('project_id', '=', $project->id)
+                        ->where('priority', '<=', $priority)
+                        ->wherein('users.orientation_id', $orientations)
+                        ->orderBy('priority')
+                        ->get();
+
+                    if($project->id == 15){
+                        //dd("stop 15", $matches);
+                    }
+                
+                    if( $matches->count() > 0 ){
+                        //dd($matches);
+                        foreach($matches as $m){
+                            $std = User::find($m->user_id);
+                            //dd($matches, $m, $std);
+                            if( $std->assignments()->count() == 0 ){
+                                $project->assigned_users()->attach($std, ['level' => $level]);
+                                break;
+                            }
+                            else{
+                                //dd($s);
+                            }
                         }
                     }
                 }
@@ -233,7 +247,7 @@ class AssignmentController extends Controller
             ->select('project_id', DB::raw('count(*) as nb'))
             ->where('priority', '<=', 3)
             ->groupBy('project_id')
-            ->orderBy('nb')
+            ->orderBy('nb', 'desc')
             ->get();
 
         foreach ($matches as $match) {
@@ -252,6 +266,7 @@ class AssignmentController extends Controller
             }
         }
 
+        // pour les projets qui ne sont pas sélectionnés avant car il ne match pas
         $prof_without_project = User::where('role', 'like', 'professor')
             ->whereNotIn('id', function($query){
                 $query->select('owner_id')->from('projects')->where('selected', '=', true);
@@ -263,7 +278,7 @@ class AssignmentController extends Controller
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('owner_id', '=', $prof->id)
                 ->groupBy('project_id')
-                ->orderBy('nb')
+                ->orderBy('nb', 'desc')
                 ->first();
             
             $project = Project::find($match_prj->project_id);
@@ -280,7 +295,7 @@ class AssignmentController extends Controller
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('selected', '=', false)
                 ->groupBy('project_id')
-                ->orderBy('nb')
+                ->orderBy('nb', 'desc')
                 ->get();
 
         foreach ($match_free_prj as $match) {
@@ -349,11 +364,8 @@ class AssignmentController extends Controller
         $nb = $this->call_random(2, $level+1);
     }
 
-    public function assign(Request $request)
+    public function autoAffect(Request $request)
     {        
-        $this->fill_match_table();
-        $this->select_project();
-
         $this->assign_level(1);
         $this->assign_level(2);
         $this->assign_level(3);
@@ -361,6 +373,12 @@ class AssignmentController extends Controller
         $this->calcul_score();
         $this->need_full();
 
+        return $this->getAll($request);
+    }
+
+    public function selectProject(Request $request){
+        $this->fill_match_table();
+        $this->select_project();
         return $this->getAll($request);
     }
 

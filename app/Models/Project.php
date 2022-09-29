@@ -50,6 +50,6 @@ class Project extends Model
 
     public function preferred_users()
     {
-        return $this->belongsToMany(User::class, 'preferences');
+        return $this->belongsToMany(User::class, 'preferences')->withPivot('priority');
     }
 }

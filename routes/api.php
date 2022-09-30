@@ -47,7 +47,7 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
-        Route::get('/select-project', 'selectProject');
+        Route::get('/auto-select', 'selectProject');
         Route::get('/auto-affect', 'autoAffect');
         Route::get('/rand', 'rand');
         Route::get('/{id}', 'get');

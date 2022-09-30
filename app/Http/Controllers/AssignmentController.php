@@ -260,6 +260,7 @@ class AssignmentController extends Controller
 
             if($prof_have_project == 0){
                 $project->selected = true;
+                $project->score = 1;
                 $project->nb_student = $match->nb;
                 $project->save();
                 $nb_project++;
@@ -284,6 +285,7 @@ class AssignmentController extends Controller
             $project = Project::find($match_prj->project_id);
             if($project != null){
                 $project->selected = true;
+                $project->score = 2;
                 $project->nb_student = $match_prj->nb;
                 $project->save();
                 $nb_project++;
@@ -306,6 +308,7 @@ class AssignmentController extends Controller
             $project = Project::find($match->project_id);
             
             $project->selected = true;
+            $project->score = 3;
             $project->nb_student = $match->nb;
             $project->save();
             $nb_project++;

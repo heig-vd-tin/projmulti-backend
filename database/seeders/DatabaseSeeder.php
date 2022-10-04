@@ -22,9 +22,12 @@ class DatabaseSeeder extends Seeder
             OrientationSeeder::class,
             DomainSeeder::class,
             TagSeeder::class,
-            UserSeeder::class,
-            ProjectSeeder::class,
-            PreferenceSeeder::class
+            ProfSeeder2022::class,
+            //UserSeeder::class,
+            //ProjectSeeder::class,
+            //PreferenceSeeder::class,
+            ProjectSeeder2022::class,
+            StdSeeder2022::class
         ]);
     }
 }

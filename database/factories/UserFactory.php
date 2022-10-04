@@ -18,6 +18,7 @@ class UserFactory extends Factory
         return [
             'firstname' => $name[0],
             'lastname' => $name[1],
+            'initials' => $name[0][0] . $name[1][0],
             'email' => $this->faker->unique()->safeEmail(),
             'role' => UserRole::STUDENT,
             'orientation_id' => rand(1, 3)

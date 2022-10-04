@@ -33,6 +33,7 @@ class ProjectSeeder extends Seeder
             for ($i = 0; $i < $this->count; $i++) {
                 $project = Project::create([
                     'title' => 'Project ' . $cpt_proj,
+                    'reference' => $faker->realText(3),
                     'short_description' => $faker->realText( rand(20, 100) ),
                     'description' => $faker->realText( rand(20, 800) ), //'Description of project ' . $cpt_proj,
                     'owner_id' => $prof->id,

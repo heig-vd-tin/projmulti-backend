@@ -126,6 +126,7 @@ class AssignmentController extends Controller
     }
 
     function assign_level($level){
+        $max_nbr_user = 5;
         $max_priority = Preference::max('priority');
 
         $users = User::all();
@@ -153,15 +154,23 @@ class AssignmentController extends Controller
                         }
                     }
 
+                    /*if($project->id == 4){
+                        dd($nbr_usr_need, $needs, $orientations, $o);
+                    }*/
+
+                    $total_assigned = DB::table('assignments')
+                        ->where('project_id', '=', $project->id)
+                        ->count();                        
+
                     $assigned_needs = DB::table('assignments')
                         ->join('users', 'user_id', '=', 'users.id')
                         ->where('project_id', '=', $project->id)
                         ->wherein('users.orientation_id', $orientations)
                         ->get();
 
-                    if( $assigned_needs->count() >= $nbr_usr_need){
+                    if( $assigned_needs->count() >= $nbr_usr_need || $total_assigned >= $max_nbr_user){
                         continue;
-                        dd($n, $assigned_needs, $orientations, $project);
+                        dd($n, $assigned_needs, $orientations, $project, $total_assigned);
                     }
                
                     switch($level){
@@ -281,7 +290,9 @@ class AssignmentController extends Controller
                 ->groupBy('project_id')
                 ->orderBy('nb', 'desc')
                 ->first();
-            
+            if(!isset($match_prj))
+                dd($prof, $match_prj);
+
             $project = Project::find($match_prj->project_id);
             if($project != null){
                 $project->selected = true;
@@ -367,6 +378,10 @@ class AssignmentController extends Controller
         $nb = $this->call_random(2, $level+1);
     }
 
+    public function calculMatch(Request $request){
+        $this->fill_match_table();
+    }
+
     public function autoAffect(Request $request)
     {        
         $this->assign_level(1);
@@ -379,8 +394,7 @@ class AssignmentController extends Controller
         return $this->getAll($request);
     }
 
-    public function selectProject(Request $request){
-        $this->fill_match_table();
+    public function selectProject(Request $request){        
         $this->select_project();
         return $this->getAll($request);
     }

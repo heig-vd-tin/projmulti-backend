@@ -17,6 +17,7 @@ class CreateUsersTable extends Migration
             $table->id();
             $table->string('firstname');
             $table->string('lastname');
+            $table->string('initials', 5);
             $table->string('email')->unique();
             $table->string('role');
             $table->unsignedBigInteger('orientation_id')->nullable();

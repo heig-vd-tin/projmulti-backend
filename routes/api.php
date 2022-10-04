@@ -47,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
+        Route::get('/calcul-match', 'calculMatch');
         Route::get('/auto-select', 'selectProject');
         Route::get('/auto-affect', 'autoAffect');
         Route::get('/rand', 'rand');

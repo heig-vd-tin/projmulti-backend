@@ -36,6 +36,10 @@ class KeycloakGuard implements Guard
         $this->decodedToken = null;
         $this->request = $request;
 
+        if(false){
+            $this->ldap_request();
+        }
+
         // tmz : disable keycloak for local development
         $id = env('ID_USER', null);
         if( env('APP_DEBUG', false) && $id){
@@ -46,6 +50,34 @@ class KeycloakGuard implements Guard
             $this->authenticate();
             dd('user', $user);
         }
+    }
+
+    function ldap_request(){
+        $ldapserver = 'ldap.heig-vd.ch';
+        $ldapuser      = 'iai-ldap'; 
+        $ldappass     = env('LDAP_PASSWORD', null);
+        $ldaptree    = "DC=einet,DC=ad,DC=eivd,DC=ch";
+        $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
+
+        if($ldapconn) {
+            
+            $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or die ("Error trying to bind: ".ldap_error($ldapconn));
+            
+            if ($ldapbind) {
+                echo "LDAP bind successful...<br /><br />";
+               
+                $person = "maulaz";
+                $filtre="(|(sn=$person*)(cn=$person*))"; //"(cn=*)"
+	            $restriction = array( "cn", "sn", "mail", "company", "department", "title", "userPrincipalName", "mailNickname");
+
+                $result = ldap_search($ldapconn,$ldaptree,$filtre,$restriction) or die ("Error in search query: ".ldap_error($ldapconn));
+                $data = ldap_get_entries($ldapconn, $result);
+                dd("connexion", $result, $data);
+            }
+
+            ldap_close($ldapconn);
+        }
+        dd("not connected");
     }
 
     /**

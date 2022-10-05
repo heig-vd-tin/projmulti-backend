@@ -32,7 +32,7 @@ class AssignmentController extends Controller
     {
         switch ($domain->id){
             case '1': // meca
-                return [7, 8];
+                return $enlarge ? [7,8] : [8];
             case '2': // electronic
                 return $enlarge ? [2,7,3] : [2];
             case '3': // electric
@@ -130,6 +130,91 @@ class AssignmentController extends Controller
         }
         return $nbr_assigned;
     }*/
+
+    function assign_auto($level){
+
+        $clean = false;
+        $enlarge = false;
+        $max_preference = 3;
+        $multi_orientation = false;
+
+                switch($level){
+                    case 0:
+                        $clean = true;
+                        break;
+                    case 1:
+                        $max_preference = 3;
+                        break;
+                    case 2:
+                        $enlarge = true;
+                        break;
+                    case 3:
+                        $max_preference = 4;
+                        break;
+                    case 4:
+                        $enlarge = true;
+                        $multi_orientation = true;
+                        break;
+                    case 5:
+                        $max_preference = 4;
+                        $enlarge = true;
+                        break;
+                    case 6:
+                        $max_preference = 4;
+                        $enlarge = true;
+                        $multi_orientation = true;
+                        break;
+                }
+
+                $max_nbr_user = 4;
+                $max_priority = Preference::max('priority');
+        
+                $users = User::all();
+        
+                if($clean){
+                    Assignment::truncate();
+                }
+        
+                $prjs = Project::Where('selected', '=', true)
+                    ->OrderBy('nb_student')
+                    ->get();
+
+                //dd("prjs", $prjs);
+        
+                foreach ($prjs as $project) { 
+                    $domains = $project->domains;
+                    foreach ($domains as $d){
+
+                    $matches = DB::table('matches')
+                        ->join('projects', 'matches.project_id', '=', 'projects.id')
+                        ->join('users', 'matches.user_id', '=', 'users.id')
+                        ->where('project_id', '=', $project->id)
+                        ->where('priority', '<=', $max_preference)
+                        ->where('enlarge', '=', $enlarge)
+                        ->orderBy('priority')
+                        ->get();
+
+                        //dd("matches", $matches, $enlarge, $max_preference);
+
+                        $assigned = $project->assigned_users()->count();
+
+                        if( $assigned < $max_nbr_user){
+                            //dd("max", $matches, $assigned);
+                            foreach($matches as $m){
+                                $std = User::find($m->user_id);
+                                
+                                $users_with_same_orientation = $project->assigned_users()->where('orientation_id', '=', $std->orientation_id)->get();
+
+                                if( $std->assignments()->count() == 0 && (count($users_with_same_orientation) == 0 || $multi_orientation)){
+                                    $project->assigned_users()->attach($std, ['level' => $level, 'domain_id' => $d->id]);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+    }
 
     function assign_level($clean, 
             $enlarge_orientation, 
@@ -405,12 +490,17 @@ class AssignmentController extends Controller
     }
 
     public function autoAffect(Request $request)
-    {        
+    {   
+        /*     
         $this->assign_level(true, false, false, 2, false, 1);
         $this->assign_level(false, false, false, 3, false, 2);
         $this->assign_level(false, true, true, 3, false, 3);
         $this->assign_level(false, true, true, 3, true, 4);
         $this->assign_level(false, true, true, 4, false, 5);
+        */
+
+        for($i=0; $i<=6; $i++)
+            $this->assign_auto($i);
 
         $this->calcul_score();
         $this->need_full();

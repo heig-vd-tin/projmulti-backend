@@ -19,6 +19,7 @@ class CreateMatchesTable extends Migration
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
             $table->integer('priority')->default(0);
+            $table->boolean('enlarge')->default(false);
             $table->integer('version')->default(0);
 
             $table->unique(['project_id', 'user_id', 'version']);

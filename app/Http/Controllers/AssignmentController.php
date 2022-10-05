@@ -47,14 +47,15 @@ class AssignmentController extends Controller
         return [];
     }
 
-    function fill_match_table(){
+    function fill_match_table($clean, $enlarge){
         $projects = Project::all();
 
-        Match::truncate();
+        if($clean)
+            Match::truncate();
 
         foreach ($projects as $project) {
             foreach ($project->domains as $domain){
-                $match_orientation = $this->get_orientation_from_domain($domain, false);
+                $match_orientation = $this->get_orientation_from_domain($domain, $enlarge);
                 $users = $project->preferred_users()
                         ->wherein('orientation_id', $match_orientation )
                         ->get();
@@ -68,14 +69,15 @@ class AssignmentController extends Controller
                         $p = Preference::where('project_id', '=', $project->id)
                         ->where('user_id', '=', $user->id)->first()->priority;
 
-                        $user->match_projects()->attach($project, ['priority' => $p]);
+                        $user->match_projects()->attach($project, ['priority' => $p, 'enlarge' => $enlarge]);
                     }
                 }
             }
         }
     }
 
-    function assign_random($priority_max, $clear_table, $itteration){
+    // tmz : clean and debug
+    /*function assign_random($priority_max, $clear_table, $itteration){
         
         $nbr_assigned = 0;
 
@@ -123,15 +125,20 @@ class AssignmentController extends Controller
             }
         }
         return $nbr_assigned;
-    }
+    }*/
 
-    function assign_level($level){
-        $max_nbr_user = 5;
+    function assign_level($clean, 
+            $enlarge_orientation, 
+            $enlarge_matches,
+            $max_preference,
+            $level){
+
+        $max_nbr_user = 4;
         $max_priority = Preference::max('priority');
 
         $users = User::all();
 
-        if($level == 1){
+        if($clean){
             Assignment::truncate();
             //dd("Delete table");
         }
@@ -143,20 +150,20 @@ class AssignmentController extends Controller
         foreach ($prjs as $project) {
             $needs = $project->domains;
             foreach ($needs as $i=>$n){
-                $orientations = $this->get_orientation_from_domain($n, $level != 1 );
+                $orientations = $this->get_orientation_from_domain($n, $enlarge_orientation );
                 
                 foreach ($orientations as $o){
                     $nbr_usr_need = 0;
                     foreach ($needs as $n){
-                        $test = $this->get_orientation_from_domain($n, $level != 1 );
+                        $test = $this->get_orientation_from_domain($n, $enlarge_orientation );
                         if (in_array($o, $test)){
                             $nbr_usr_need++;
                         }
                     }
 
-                    /*if($project->id == 4){
-                        dd($nbr_usr_need, $needs, $orientations, $o);
-                    }*/
+                    if($project->id == 6){
+                        //dd($nbr_usr_need, $needs, $orientations, $o);
+                    }
 
                     $total_assigned = DB::table('assignments')
                         ->where('project_id', '=', $project->id)
@@ -165,38 +172,30 @@ class AssignmentController extends Controller
                     $assigned_needs = DB::table('assignments')
                         ->join('users', 'user_id', '=', 'users.id')
                         ->where('project_id', '=', $project->id)
-                        ->wherein('users.orientation_id', $orientations)
+                        ->where('users.orientation_id', '=', $o)
                         ->get();
 
                     if( $assigned_needs->count() >= $nbr_usr_need || $total_assigned >= $max_nbr_user){
+                        if($project->id == 8 && !in_array($o, [1,3])){
+                            //dd("aaa",$assigned_needs, $o, $nbr_usr_need, $total_assigned, $max_nbr_user);
+                        }
                         continue;
                         dd($n, $assigned_needs, $orientations, $project, $total_assigned);
-                    }
-               
-                    switch($level){
-                        case 0:
-                        case 1:
-                            $priority = 2;
-                            break;
-                        case 2:
-                            $priority = 3;
-                            break;
-                        case 3:
-                            $priority = 4;
-                            break;           
                     }
 
                     $matches = DB::table('matches')
                         ->join('projects', 'matches.project_id', '=', 'projects.id')
                         ->join('users', 'matches.user_id', '=', 'users.id')
                         ->where('project_id', '=', $project->id)
-                        ->where('priority', '<=', $priority)
-                        ->wherein('users.orientation_id', $orientations)
+                        ->where('priority', '<=', $max_preference)
+                        ->where('enlarge', '=', $enlarge_matches)
+                        ->where('users.orientation_id', '=', $o)
+                        //->wherein('users.orientation_id', $orientations)
                         ->orderBy('priority')
                         ->get();
-
-                    if($project->id == 15){
-                        //dd("stop 15", $matches);
+                    
+                    if($project->id == 6 && !in_array($o, [1,2,7])){
+                        //dd("stop 6", $matches, $orientations, $o);
                     }
                 
                     if( $matches->count() > 0 ){
@@ -204,7 +203,10 @@ class AssignmentController extends Controller
                         foreach($matches as $m){
                             $std = User::find($m->user_id);
                             //dd($matches, $m, $std);
-                            if( $std->assignments()->count() == 0 ){
+                            
+                            $users_with_same_orientation = $project->assigned_users()->where('orientation_id', '=', $std->orientation_id)->get();
+
+                            if( $std->assignments()->count() == 0 && count($users_with_same_orientation) == 0){
                                 $project->assigned_users()->attach($std, ['level' => $level]);
                                 break;
                             }
@@ -249,12 +251,13 @@ class AssignmentController extends Controller
         $this->reset_project();
 
         $nb_project = 0;
-        $nb_student_per_project = 5;
+        $nb_student_per_project = 4;
         $nb_prj_need = intdiv(User::where('role', 'like', 'student')->count(), $nb_student_per_project);
 
         $matches = DB::table('matches')
             ->select('project_id', DB::raw('count(*) as nb'))
             ->where('priority', '<=', 3)
+            ->where('enlarge', '=', false)
             ->groupBy('project_id')
             ->orderBy('nb', 'desc')
             ->get();
@@ -287,6 +290,7 @@ class AssignmentController extends Controller
                 ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('owner_id', '=', $prof->id)
+                ->where('enlarge', '=', false)
                 ->groupBy('project_id')
                 ->orderBy('nb', 'desc')
                 ->first();
@@ -307,6 +311,7 @@ class AssignmentController extends Controller
                 ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('selected', '=', false)
+                ->where('enlarge', '=', false)
                 ->groupBy('project_id')
                 ->orderBy('nb', 'desc')
                 ->get();
@@ -379,14 +384,16 @@ class AssignmentController extends Controller
     }
 
     public function calculMatch(Request $request){
-        $this->fill_match_table();
+        $this->fill_match_table(true, false);
+        $this->fill_match_table(false, true);
     }
 
     public function autoAffect(Request $request)
     {        
-        $this->assign_level(1);
-        $this->assign_level(2);
-        $this->assign_level(3);
+        $this->assign_level(true, false, false, 2, 1);
+        $this->assign_level(false, false, false, 3, 2);
+        $this->assign_level(false, true, true, 3, 3);
+        $this->assign_level(false, true, true, 4, 4);
 
         $this->calcul_score();
         $this->need_full();

@@ -18,14 +18,16 @@ class CreateMatchesTable extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('domain_id')->nullable();
             $table->integer('priority')->default(0);
             $table->boolean('enlarge')->default(false);
             $table->integer('version')->default(0);
 
-            $table->unique(['project_id', 'user_id', 'version']);
+            $table->unique(['project_id', 'user_id', 'domain_id', 'version']);
 
             $table->foreign('project_id')->references('id')->on('projects');
             $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('domain_id')->references('id')->on('domains');
         });
     }
 

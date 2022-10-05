@@ -61,7 +61,11 @@ class AssignmentController extends Controller
                         ->get();
                 
                 foreach ($users as $user){
-                    $exist = $project->matched_users()->where('user_id', '=', $user->id)->count();
+                    $exist = $project->matched_users()
+                        ->where('user_id', '=', $user->id)
+                        ->where('domain_id', '=', $domain->id)
+                        ->count();
+
                     if($exist > 0){
                         //dd($project, $user, $user->match_projects()->get());
                     }
@@ -69,7 +73,7 @@ class AssignmentController extends Controller
                         $p = Preference::where('project_id', '=', $project->id)
                         ->where('user_id', '=', $user->id)->first()->priority;
 
-                        $user->match_projects()->attach($project, ['priority' => $p, 'enlarge' => $enlarge]);
+                        $user->match_projects()->attach($project, ['priority' => $p, 'enlarge' => $enlarge, 'domain_id' => $domain->id]);
                     }
                 }
             }
@@ -131,6 +135,7 @@ class AssignmentController extends Controller
             $enlarge_orientation, 
             $enlarge_matches,
             $max_preference,
+            $multi_orientation,
             $level){
 
         $max_nbr_user = 4;
@@ -175,6 +180,10 @@ class AssignmentController extends Controller
                         ->where('users.orientation_id', '=', $o)
                         ->get();
 
+                        if($project->id == 11 && $o == 2 && $multi_orientation){
+                            //dd($assigned_needs, $o, $nbr_usr_need, $total_assigned, $project);
+                        }
+
                     if( $assigned_needs->count() >= $nbr_usr_need || $total_assigned >= $max_nbr_user){
                         if($project->id == 8 && !in_array($o, [1,3])){
                             //dd("aaa",$assigned_needs, $o, $nbr_usr_need, $total_assigned, $max_nbr_user);
@@ -194,7 +203,7 @@ class AssignmentController extends Controller
                         ->orderBy('priority')
                         ->get();
                     
-                    if($project->id == 6 && !in_array($o, [1,2,7])){
+                    if($project->id == 18 && !in_array($o, [])){
                         //dd("stop 6", $matches, $orientations, $o);
                     }
                 
@@ -205,9 +214,16 @@ class AssignmentController extends Controller
                             //dd($matches, $m, $std);
                             
                             $users_with_same_orientation = $project->assigned_users()->where('orientation_id', '=', $std->orientation_id)->get();
+                            
+                            if($project->id == 0)                            
+                                dd("ksad", $project, $std, $level);
 
-                            if( $std->assignments()->count() == 0 && count($users_with_same_orientation) == 0){
-                                $project->assigned_users()->attach($std, ['level' => $level]);
+                            if($project->id == 11 && $multi_orientation){
+                                //dd($users_with_same_orientation, $std->orientation_id, $project, $std);
+                            }
+                            if( $std->assignments()->count() == 0 && (count($users_with_same_orientation) == 0 || $multi_orientation)){
+                                //dd("ksad", $project, $std, $level);
+                                $project->assigned_users()->attach($std, ['level' => $level, 'domain_id' => $n->id]);
                                 break;
                             }
                             else{
@@ -390,10 +406,11 @@ class AssignmentController extends Controller
 
     public function autoAffect(Request $request)
     {        
-        $this->assign_level(true, false, false, 2, 1);
-        $this->assign_level(false, false, false, 3, 2);
-        $this->assign_level(false, true, true, 3, 3);
-        $this->assign_level(false, true, true, 4, 4);
+        $this->assign_level(true, false, false, 2, false, 1);
+        $this->assign_level(false, false, false, 3, false, 2);
+        $this->assign_level(false, true, true, 3, false, 3);
+        $this->assign_level(false, true, true, 3, true, 4);
+        $this->assign_level(false, true, true, 4, false, 5);
 
         $this->calcul_score();
         $this->need_full();

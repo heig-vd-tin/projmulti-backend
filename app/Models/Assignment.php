@@ -12,6 +12,7 @@ class Assignment extends Model
     protected $fillable = [
         'project_id',
         'user_id',
+        'domain_id',
         'priority',
     ];
 
@@ -28,5 +29,10 @@ class Assignment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function domain()
+    {
+        return $this->belongsTo(Domain::class);
     }
 }

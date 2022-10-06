@@ -17,7 +17,7 @@ class AssignmentController extends Controller
     {
         $user = $request->user();
         if ($user->isAdmin())
-            return Assignment::all()->load(['user', 'project']);
+            return Assignment::all()->load(['user', 'project', 'domain']);
         else return $user->assignments->load('project');
     }
 
@@ -25,14 +25,14 @@ class AssignmentController extends Controller
     {
         $assignment = Assignment::find($id);
         $this->authorize('getAssignment', $assignment);
-        return $assignment->load(['user', 'project']);
+        return $assignment->load(['user', 'project', 'domain']);
     }
 
     function get_orientation_from_domain($domain, $enlarge)
     {
         switch ($domain->id){
             case '1': // meca
-                return $enlarge ? [7,8] : [8];
+                return $enlarge ? [7,8] : [7,8];
             case '2': // electronic
                 return $enlarge ? [2,7,3] : [2];
             case '3': // electric
@@ -178,9 +178,7 @@ class AssignmentController extends Controller
                 $prjs = Project::Where('selected', '=', true)
                     ->OrderBy('nb_student')
                     ->get();
-
-                //dd("prjs", $prjs);
-        
+       
                 foreach ($prjs as $project) { 
                     $domains = $project->domains;
                     foreach ($domains as $d){
@@ -191,14 +189,23 @@ class AssignmentController extends Controller
                         ->where('project_id', '=', $project->id)
                         ->where('priority', '<=', $max_preference)
                         ->where('enlarge', '=', $enlarge)
+                        ->where('domain_id', '=', $d->id)
                         ->orderBy('priority')
                         ->get();
 
-                        //dd("matches", $matches, $enlarge, $max_preference);
+                        $domain_assigned = DB::table('assignments')
+                            ->where('project_id', '=', $project->id)
+                            ->where('domain_id', '=', $d->id)
+                            ->count();
 
-                        $assigned = $project->assigned_users()->count();
+                        $total_assigned = DB::table('assignments')
+                            ->where('project_id', '=', $project->id)
+                            ->count();
 
-                        if( $assigned < $max_nbr_user){
+                        //if($project->id != 6)
+                        //    dd("matches",$project->id, $d->id, $matches, $domain_assigned, $total_assigned);
+
+                        if( $total_assigned < $max_nbr_user && $domain_assigned == 0){                            
                             //dd("max", $matches, $assigned);
                             foreach($matches as $m){
                                 $std = User::find($m->user_id);
@@ -206,6 +213,10 @@ class AssignmentController extends Controller
                                 $users_with_same_orientation = $project->assigned_users()->where('orientation_id', '=', $std->orientation_id)->get();
 
                                 if( $std->assignments()->count() == 0 && (count($users_with_same_orientation) == 0 || $multi_orientation)){
+
+                                    //if($project->id != 6)
+                                    //    dd("matches",$project->id, $d->id, $matches, $domain_assigned, $total_assigned);
+
                                     $project->assigned_users()->attach($std, ['level' => $level, 'domain_id' => $d->id]);
                                     break;
                                 }
@@ -502,8 +513,8 @@ class AssignmentController extends Controller
         for($i=0; $i<=6; $i++)
             $this->assign_auto($i);
 
-        $this->calcul_score();
-        $this->need_full();
+        //$this->calcul_score();
+        //$this->need_full();
 
         return $this->getAll($request);
     }

@@ -20,7 +20,8 @@ class Project extends Model
 
     protected $with = [
         'domains',
-        'tags'
+        'tags',
+        'assigned_users'
     ];
 
     public function domains()
@@ -40,7 +41,7 @@ class Project extends Model
 
     public function assigned_users()
     {
-        return $this->belongsToMany(User::class, 'assignments');
+        return $this->belongsToMany(User::class, 'assignments')->withPivot(['domain_id']);
     }
 
     public function matched_users()

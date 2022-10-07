@@ -43,6 +43,14 @@ class ProfSeeder2022 extends Seeder
         ]);
 
         User::create([
+            'firstname' => 'Tristan',
+            'lastname' => 'Lieberherr',
+            'email' => 'tristan.lieberherr@heig-vd.ch',
+            'initials' => 'TLR',
+            'role' => UserRole::ADMIN
+        ]);
+
+        User::create([
             'lastname' => 'Baillifard',
             'firstname' => 'Marc‐André',
             'email' => $faker->unique()->safeEmail(),

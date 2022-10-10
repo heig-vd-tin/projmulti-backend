@@ -52,7 +52,7 @@ class ProfSeeder2022 extends Seeder
 
         User::create([
             'lastname' => 'Baillifard',
-            'firstname' => 'Marc‐André',
+            'firstname' => 'Marc-André',
             'email' => $faker->unique()->safeEmail(),
             'initials' => 'BAM',
             'role' => UserRole::PROFESSOR
@@ -75,7 +75,7 @@ class ProfSeeder2022 extends Seeder
         ]);
 
         User::create([
-            'firstname' => 'Jean‐françois',
+            'firstname' => 'Jean-françois',
             'lastname' => 'Dumas',
             'email' => $faker->unique()->safeEmail(),
             'initials' => 'DJF',

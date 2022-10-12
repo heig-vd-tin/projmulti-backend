@@ -34,9 +34,7 @@ class KeycloakGuard implements Guard
         $this->provider = $provider;
         $this->decodedToken = null;
         $this->request = $request;
-
-        $this->ldap_request("thibald.laub@heig-vd.ch");
-
+       
         // tmz : disable keycloak for local development
         $id = env('ID_USER', null);
         if (env('APP_DEBUG', false) && $id) {

@@ -44,7 +44,9 @@ class KeycloakGuard implements Guard
             $this->setUser($user);
         } else {
             $this->authenticate();
-            // dd('user', $user);
+	   
+	    //dd("aaaa", Auth::id());
+            // dd("user", $this->user);
         }
     }
 
@@ -233,7 +235,10 @@ class KeycloakGuard implements Guard
     public function validate(array $credentials = []): bool
     {
         if (!$this->decodedToken) return false;
+//	dd("cred : ",$credentials);
         $user = $this->provider->retrieveByCredentials($credentials);
+	//dd("aa user", $user);
+	//dd("aaaa",$user, $this->decodedToken);
         if (!$user) {
             $this->ldap_request($this->decodedToken->email);
             if (!$this->ldapData) return false;
@@ -249,7 +254,7 @@ class KeycloakGuard implements Guard
                 $user->orientation_id = Orientation::where('acronym', $this->map_orientation($this->ldapData))->firstOrFail()->id;
             }
             $user->save();
-        }
+	}
         $this->setUser($user);
         return true;
     }
@@ -286,6 +291,7 @@ class KeycloakGuard implements Guard
      */
     private function authenticate()
     {
+//	    dd("kjs",$this->request->header(), $this, $this->request->bearerToken());
         try {
             $this->decodedToken = Token::decode($this->config['realm_public_key'], $this->request->bearerToken());
         } catch (\Exception $e) {
@@ -294,6 +300,7 @@ class KeycloakGuard implements Guard
         }
 
         if ($this->decodedToken) {
+		//dd("decode", $this->decodedToken );
             $this->validate([
                 $this->config['user_provider_credential'] => $this->decodedToken->{$this->config['token_principal_attribute']}
             ]);

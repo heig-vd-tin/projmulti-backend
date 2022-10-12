@@ -19,10 +19,16 @@ class Project extends Model
     ];
 
     protected $with = [
+        'owner',
         'domains',
         'tags',
         'assigned_users'
     ];
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function domains()
     {

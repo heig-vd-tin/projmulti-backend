@@ -537,7 +537,7 @@ class AssignmentController extends Controller
         for($i=0; $i<=6; $i++)
             $this->assign_auto($i);
 
-        copyAssignments(9);
+        //$this->copyAssignments(9);
 
         //$this->calcul_score();
         //$this->need_full();

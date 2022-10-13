@@ -50,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/calcul-match', 'calculMatch');
         Route::get('/auto-select', 'selectProject');
         Route::get('/auto-affect', 'autoAffect');
+        Route::get('/save-affect/{$current}', 'copyAssignments');
         Route::get('/rand', 'rand');
         Route::get('/{id}', 'get');
     });

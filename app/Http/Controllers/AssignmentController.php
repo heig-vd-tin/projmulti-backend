@@ -500,6 +500,26 @@ class AssignmentController extends Controller
         $this->fill_match_table(false, true);
     }
 
+    public function copyAssignments($source){
+        $max_level = Assignment::max('level');
+
+        if($source < 10){
+            $assignments = Assignment::where('level', '<=', 9)->get();
+            $level = 10;
+        }
+        else{
+            $assignments = Assignment::where('level', '=', $source)->get();
+            $level = $source+1;
+        }
+
+        foreach ($assignments as $a) {
+            $new = $a->replicate();
+            $new->level = $level;
+            $new->save();
+        }
+    }
+
+
     public function autoAffect(Request $request)
     {   
         /*     
@@ -510,8 +530,14 @@ class AssignmentController extends Controller
         $this->assign_level(false, true, true, 4, false, 5);
         */
 
+        $level = Assignment::max('level');
+        if($level >= 10)
+            dd("Déjà fait, impossible de refaire");
+
         for($i=0; $i<=6; $i++)
             $this->assign_auto($i);
+
+        copyAssignments(9);
 
         //$this->calcul_score();
         //$this->need_full();

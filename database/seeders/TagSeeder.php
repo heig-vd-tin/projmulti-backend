@@ -21,12 +21,16 @@ class TagSeeder extends Seeder
             ['name' => '#Physics'],
             ['name' => '#Math'],
             ['name' => '#Thermic'],
-            ['name' => '#Mecanical'],
+            ['name' => '#Mechanical'],
             ['name' => '#Flow'],
             ['name' => '#Optic'],
             ['name' => '#Simulation'],
             ['name' => '#Control'],
             ['name' => '#IoT'],
+            ['name' => '#3D printer'],
+            ['name' => '#Sensor'],
+            ['name' => '#VR'],
+            ['name' => '#Image']
         ];
         foreach ($tags as $tag) {
             Tag::create($tag);

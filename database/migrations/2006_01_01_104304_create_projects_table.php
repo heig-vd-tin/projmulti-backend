@@ -19,7 +19,7 @@ class CreateProjectsTable extends Migration
             $table->string('title', 100);
             $table->string('reference', 100)->nullable();
             $table->string('short_description', 255);
-            $table->text('description')->nullable();
+            $table->mediumText('description')->nullable();
             $table->unsignedBigInteger('owner_id');
             $table->boolean('is_active')->default(false);
             $table->integer('score')->default(0);

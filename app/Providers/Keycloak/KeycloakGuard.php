@@ -2,6 +2,7 @@
 
 namespace App\Providers\Keycloak;
 
+use Illuminate\Support\Facades\Log;
 use App\Constants\UserRole;
 use App\Models\Orientation;
 use App\Models\User;
@@ -237,9 +238,12 @@ class KeycloakGuard implements Guard
         $user = $this->provider->retrieveByCredentials($credentials);
 	//dd("aa user", $user);
 	//dd("aaaa",$user, $this->decodedToken);
-        if (!$user) {
+        if (is_null($user)) {
             $this->ldap_request($this->decodedToken->email);
-            if (!$this->ldapData) return false;
+	    if (!$this->ldapData){
+		    Log::debug('LDAP request error');
+		    return false;
+	    }
             $user = new User([
                 'firstname' => $this->decodedToken->given_name,
                 'lastname' => $this->decodedToken->family_name,

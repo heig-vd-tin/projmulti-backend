@@ -234,10 +234,7 @@ class KeycloakGuard implements Guard
     public function validate(array $credentials = []): bool
     {
         if (!$this->decodedToken) return false;
-//	dd("cred : ",$credentials);
         $user = $this->provider->retrieveByCredentials($credentials);
-	//dd("aa user", $user);
-	//dd("aaaa",$user, $this->decodedToken);
         if (is_null($user)) {
             $this->ldap_request($this->decodedToken->email);
 	    if (!$this->ldapData){
@@ -255,7 +252,14 @@ class KeycloakGuard implements Guard
             } elseif ($user->isStudent()) {
                 $user->orientation_id = Orientation::where('acronym', $this->map_orientation($this->ldapData))->firstOrFail()->id;
             }
-            $user->save();
+	    Log::debug('Check if user exist : '. $user->email);
+	    $check = User::where('email', $user->email)->first();
+	    if(!$check){
+                $user->save();
+	    }
+	    else{
+	        Log::debug('user exist and not saved');
+	    }
 	}
         $this->setUser($user);
         return true;

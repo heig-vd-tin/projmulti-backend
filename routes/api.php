@@ -22,6 +22,8 @@ use App\Models\User;
 |
 */
 
+ini_set("memory_limit","-1");
+
 Route::middleware('auth:api')->group(function () {
     Route::prefix('/project')->controller(ProjectController::class)->group(function () {
         Route::get('/all', 'getAll');
@@ -30,6 +32,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/assigned', 'getAssigned');
         
         Route::post('/select', 'selectProject');
+
+        Route::post('/lock', 'lockProject');        
 
         Route::post('/create', 'createProject');
         Route::post('/edit', 'editProject');

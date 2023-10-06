@@ -74,6 +74,19 @@ class ProjectController extends Controller
         return $project->fresh();
     }
 
+    public function lockProject(Request $request)
+    {
+        //$this->authorize('lockProject', Project::class);
+        $project = Project::findOrFail($request->id);
+        if( $request->lock )
+            $project->state = 1;
+        else
+            $project->state = 0;
+        
+        $project->save();
+        return $project;
+    }
+
     public function editProject(Request $request)
     {
         $request->validate([

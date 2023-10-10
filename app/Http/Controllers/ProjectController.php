@@ -58,7 +58,8 @@ class ProjectController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'short_description' => $request->short_description,
-            'owner_id' => $user->id
+            'owner_id' => $user->id,
+            'state' => 0
         ]);
         foreach ($request->domains as $o) $domains[$o['id']] = ['importance' => $o['importance']];
             $project->domains()->attach($domains);
@@ -78,6 +79,7 @@ class ProjectController extends Controller
     {
         //$this->authorize('lockProject', Project::class);
         $project = Project::findOrFail($request->id);
+
         if( $request->lock )
             $project->state = 1;
         else

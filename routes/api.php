@@ -59,7 +59,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/get-all', 'getAll');
 
         Route::post('/load-data', 'loadData');
-        
+        Route::get('/get-export', 'getExportData');
+
         Route::get('/{id}', 'get');
 
     });

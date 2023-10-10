@@ -21,6 +21,14 @@ class AssignmentController extends Controller
         }
     }
 
+    public function getExportData(Request $request)
+    {
+        $user = $request->user();
+        if ($user->isAdmin()){
+            return DB::table('export_data')->get();
+        }
+    }
+
     public function loadData(Request $request)
     {       
         Assignment::truncate();

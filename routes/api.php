@@ -56,7 +56,12 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/auto-affect', 'autoAffect');
         Route::get('/save-affect/{$current}', 'copyAssignments');
         Route::get('/rand', 'rand');
+        Route::get('/get-all', 'getAll');
+
+        Route::post('/load-data', 'loadData');
+        
         Route::get('/{id}', 'get');
+
     });
 
     Route::get('/orientation/all', function () {

@@ -16,15 +16,24 @@ class AssignmentController extends Controller
     public function getAll(Request $request)
     {
         $user = $request->user();
-        if ($user->isAdmin())
-            return Assignment::all()->load(['user', 'project', 'domain']);
-        else return $user->assignments->load('project');
+        if ($user->isAdmin()){
+            return DB::table('assignments')->get(); //Assignment::all()->load(['id','created_at','up'user', 'project', 'domain']);
+        }
+    }
+
+    public function loadData(Request $request)
+    {       
+        Assignment::truncate();
+        foreach ($request["data"] as $value){
+            Assignment::insert($value);
+        }        
+        return null;
     }
 
     public function get(Request $request, $id)
     {
         $assignment = Assignment::find($id);
-        $this->authorize('getAssignment', $assignment);
+        //$this->authorize('getAssignment', $assignment);
         return $assignment->load(['user', 'project', 'domain']);
     }
 

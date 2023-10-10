@@ -111,6 +111,7 @@ class KeycloakGuard implements Guard
             case "Architecture, construction et planification":
                 return "!!!";
             default:
+                Log::error('Orientation not found : ' . $department);
                 return "N/A";
         }
         /*

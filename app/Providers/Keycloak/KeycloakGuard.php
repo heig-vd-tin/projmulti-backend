@@ -82,7 +82,7 @@ class KeycloakGuard implements Guard
                 return "IGQP";
             case "Technique et IT - Microtechniques":
                 return "MI";
-            case "Technique et IT - Conception":
+                case "Technique et IT - Conception de machines":
                 return "SIC";
             case "Technique et IT - Informatique embarque":
                 return "IE";
@@ -110,8 +110,17 @@ class KeycloakGuard implements Guard
                 return "IM";
             case "Architecture, construction et planification":
                 return "!!!";
+
+            // WARNING TODO TMZ : mauvais user dans LDAP
+            case "Formation de base":
+                Log::error('Formation de base : ' . $this->decodedToken->family_name);
+                return "N/A";
+            case "Assistant étudiant":
+                Log::error('Formation de base : ' . $this->decodedToken->family_name);
+                return "N/A";
+
             default:
-                Log::error('Orientation not found : ' . $department);
+                Log::error('Orientation not found : ' . $department . ' / ' . $this->decodedToken->family_name);
                 return "N/A";
         }
         /*
@@ -263,6 +272,13 @@ class KeycloakGuard implements Guard
 	    }
 	}
         $this->setUser($user);
+
+        //if ($user->isStudent() )
+        if ($user->isProfessor() )
+        {
+            dd("Not open");
+        }
+        
         return true;
     }
 

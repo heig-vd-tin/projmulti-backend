@@ -23,7 +23,8 @@ class Project extends Model
         'owner',
         'domains',
         'tags',
-        'assigned_users'
+        'assigned_users',
+        'preferred_users'
     ];
 
     public function owner()

@@ -28,7 +28,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('/project')->controller(ProjectController::class)->group(function () {
         Route::get('/all', 'getAll');
         Route::get('/alld', 'getAllWithoutDescription');
-        Route::get('/{id}', 'getProject');
+        Route::get('/getdesc/{id}', 'getProject');
         Route::get('/owned', 'getOwned');
         Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');

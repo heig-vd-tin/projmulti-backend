@@ -19,6 +19,22 @@ class ProjectController extends Controller
         else return $projects;
     }
 
+    public function getAllWithoutDescription(Request $request)
+    {
+        $projects = Project::select('id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'owner_id',
+        'is_active', 'score', 'miss_student', 'selected', 'nb_student', 'nb_domain', 'state')->get();
+        if ($request->user()->isAdmin())
+            return $projects->load(['preferred_users', 'assigned_users', 'matched_users']);
+        else return $projects;
+    }
+
+    public function getProject(Request $request, $id)
+    {
+        $projects = Project::select('id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'description', 'owner_id',
+        )->where('id', $id)->get();
+        return $projects->makeHidden(['owner','domains','tags','assigned_users']);
+    }    
+
     public function getOwned(Request $request)
     {
         $user = $request->user();

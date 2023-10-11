@@ -27,6 +27,8 @@ ini_set("memory_limit","-1");
 Route::middleware('auth:api')->group(function () {
     Route::prefix('/project')->controller(ProjectController::class)->group(function () {
         Route::get('/all', 'getAll');
+        Route::get('/alld', 'getAllWithoutDescription');
+        Route::get('/{id}', 'getProject');
         Route::get('/owned', 'getOwned');
         Route::get('/preferred', 'getPreferred');
         Route::get('/assigned', 'getAssigned');

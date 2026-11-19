@@ -63,7 +63,8 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         $this->authorize('view', $project);
-        return [$project->makeHidden(['owner', 'domains', 'tags'])];
+        // Projet complet (description, domaines, tags) : utilisé par l'affichage détaillé et l'édition.
+        return [$project];
     }
 
     /** Projets du prof connecté, toutes années confondues (le front filtre par année). */
@@ -98,7 +99,7 @@ class ProjectController extends Controller
             'id' => $editing ? 'required|integer' : 'nullable',
             'title' => 'required|string|max:100',
             'short_description' => 'required|string|max:100',
-            'description' => 'nullable|string|max:25000000',
+            'description' => 'nullable|string|max:26214400',
             'domains' => 'required|array|min:1',
             'domains.*.id' => 'required|integer|exists:domains,id',
             'domains.*.importance' => 'required|integer',

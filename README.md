@@ -1,64 +1,68 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# ProjMulti — backend
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plateforme de répartition des projets multidisciplinaires (HEIG-VD) : les enseignants proposent
+des projets, les étudiants en choisissent 5, le responsable lance une répartition automatique
+puis l'ajuste à la main.
 
-## About Laravel
+- Backend : Laravel 13 / PHP 8.5 (ce dépôt)
+- Front : Vue 2 + Vuetify 2 ([projmulti-frontend](https://github.com/heig-vd-tin/projmulti-frontend)), compilé dans l'image Docker
+- Base : MySQL 8.4 (conteneur `db`)
+- Authentification : Keycloak HEIG-VD (jeton Bearer) ; comptes créés à la première connexion
+  depuis le LDAP de l'école (rôle et orientation)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fonctionnement
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+L'admin choisit en ligne (page **Réglages**) la phase de la plateforme :
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Phase | Enseignants | Étudiants |
+|---|---|---|
+| `projects` — saisie des projets | créent / modifient leurs projets | pas d'accès |
+| `preferences` — choix des étudiants | consultent | choisissent 5 projets |
+| `closed` — fermé (répartition) | consultent | pas d'accès |
 
-## Learning Laravel
+Les projets sont rattachés à une **année de cours** (`projects.year`, ex. 2026). « Démarrer le cours
+suivant » supprime les choix, la répartition et les étudiants, mais garde les projets : un enseignant
+peut consulter ses anciens projets et les reprendre (« Reprendre pour 2027 »).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Développement local
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Prérequis : Docker. Les deux dépôts côte à côte (`../projmulti-frontend`).
 
-## Laravel Sponsors
+```bash
+cp .env.example .env        # puis APP_ENV=local, APP_DEBUG=true, ID_USER=<id admin>, mots de passe DB
+docker compose -f compose.yaml -f compose.dev.yaml up -d --build
+zcat dump.sql.gz | docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" laravel'
+docker compose exec app php artisan migrate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+API sur http://localhost:8080/api. En local (`APP_ENV=local` et `APP_DEBUG=true`), pas de Keycloak :
+l'utilisateur `ID_USER` est connecté d'office, et le header `X-Dev-User: <id>` permet d'en changer.
+Front en mode dev : `npm run serve` dans le dépôt du front (même principe, `localStorage.devUser = <id>`).
 
-### Premium Partners
+Les sources PHP sont montées dans le conteneur ; ajouter une classe ou un paquet composer demande
+un `--build`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+## Production (VM tin-projmulti)
 
-## Contributing
+```
+/opt/projmulti/projmulti-backend    ce dépôt, avec le .env de production
+/opt/projmulti/projmulti-frontend   dépôt du front
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+L'Apache de la VM termine le HTTPS et fait proxy vers le conteneur (`127.0.0.1:8080`).
 
-## Code of Conduct
+Mise à jour :
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cd /opt/projmulti/projmulti-frontend && git pull
+cd /opt/projmulti/projmulti-backend && git pull
+scripts/backup.sh
+docker compose up -d --build
+docker compose exec app php artisan migrate --force
+```
 
-## Security Vulnerabilities
+Sauvegardes : `scripts/backup.sh` (cron 12 h et 23 h, rétention 30 jours, dans `/home/iairoot/backup`).
+Restauration : `zcat backup_….sql.gz | docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" laravel'`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Variables sensibles uniquement dans `.env` (jamais dans le code) : `APP_KEY`, mots de passe MySQL,
+`KEYCLOAK_REALM_PUBLIC_KEY`, `LDAP_PASSWORD`.

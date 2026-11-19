@@ -2,177 +2,260 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
 use App\Models\Assignment;
 use App\Models\Preference;
+use App\Models\Project;
+use App\Models\Setting;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
+    private const MAX_PREFERENCES = 5;
+
+    /** Messages de validation affichés tels quels dans le formulaire. */
+    private const MESSAGES = [
+        'title.required' => 'Le titre est obligatoire.',
+        'title.max' => 'Le titre ne doit pas dépasser :max caractères.',
+        'short_description.required' => 'Le résumé court est obligatoire.',
+        'short_description.max' => 'Le résumé court ne doit pas dépasser :max caractères.',
+        'description.max' => 'La description est trop volumineuse (images trop lourdes). Réduisez la taille ou le nombre des images.',
+        'domains.required' => 'Sélectionnez au moins un domaine.',
+        'domains.min' => 'Sélectionnez au moins un domaine.',
+        'tags.max' => 'Maximum :max tags.',
+    ];
+
+    /** Année demandée (?year=), limitée à l'année courante pour les étudiants. */
+    private function requestedYear(Request $request): int
+    {
+        if ($request->user()->isStudent() || !$request->filled('year')) {
+            return Setting::currentYear();
+        }
+        return (int) $request->query('year');
+    }
+
+    private function withAdminRelations(Request $request, $projects)
+    {
+        if ($request->user()->isAdmin()) {
+            return $projects->load(['preferred_users', 'assigned_users', 'matched_users']);
+        }
+        return $projects;
+    }
+
     public function getAll(Request $request)
     {
-        $projects = Project::all();
-        if ($request->user()->isAdmin())
-            return $projects->load(['preferred_users', 'assigned_users', 'matched_users']);
-        else return $projects;
+        $projects = Project::ofYear($this->requestedYear($request))->get();
+        return $this->withAdminRelations($request, $projects);
     }
 
     public function getAllWithoutDescription(Request $request)
     {
-        $projects = Project::select('id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'owner_id',
-        'is_active', 'score', 'miss_student', 'selected', 'nb_student', 'nb_domain', 'state')->get();
-        if ($request->user()->isAdmin())
-            return $projects->load(['preferred_users', 'assigned_users', 'matched_users']);
-        else return $projects;
+        $projects = Project::select(Project::LIGHT_COLUMNS)->ofYear($this->requestedYear($request))->get();
+        return $this->withAdminRelations($request, $projects);
     }
 
     public function getProject(Request $request, $id)
     {
-        $projects = Project::select('id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'description', 'owner_id',
-        )->where('id', $id)->get();
-        return $projects->makeHidden(['owner','domains','tags','assigned_users']);
-    }    
+        $project = Project::findOrFail($id);
+        $this->authorize('view', $project);
+        return [$project->makeHidden(['owner', 'domains', 'tags'])];
+    }
 
+    /** Projets du prof connecté, toutes années confondues (le front filtre par année). */
     public function getOwned(Request $request)
     {
-        $user = $request->user();
-        return Project::where('owner_id', $user->id)->get()->load('assigned_users');
+        return Project::select(Project::LIGHT_COLUMNS)
+            ->where('owner_id', $request->user()->id)
+            ->orderByDesc('year')
+            ->get()
+            ->load('assigned_users');
     }
 
     public function getPreferred(Request $request)
     {
-        $user = $request->user();
-        $ret = $user->preferences->load('project')->map(function ($item) {
-            $a = $item->project;
-            $a->priority = $item->priority;
-            return $a;
-        });
-        return $ret;
+        return $request->user()->preferences()->with('project')->get()
+            ->filter(fn ($p) => $p->project !== null)
+            ->map(function ($preference) {
+                $project = $preference->project;
+                $project->priority = $preference->priority;
+                return $project;
+            })->values();
     }
 
     public function getAssigned(Request $request)
     {
-        $user = $request->user();
-        return Project::find($user->assignments->pluck('id'));
+        return Project::find($request->user()->assignments->pluck('project_id'));
+    }
+
+    private function validateProject(Request $request, bool $editing): array
+    {
+        return $request->validate([
+            'id' => $editing ? 'required|integer' : 'nullable',
+            'title' => 'required|string|max:100',
+            'short_description' => 'required|string|max:100',
+            'description' => 'nullable|string|max:25000000',
+            'domains' => 'required|array|min:1',
+            'domains.*.id' => 'required|integer|exists:domains,id',
+            'domains.*.importance' => 'required|integer',
+            'tags' => 'nullable|array|max:3',
+            'tags.*' => 'integer|exists:tags,id',
+        ], self::MESSAGES);
+    }
+
+    private function syncRelations(Project $project, array $data): void
+    {
+        $domains = collect($data['domains'])->mapWithKeys(fn ($d) => [$d['id'] => ['importance' => $d['importance']]]);
+        $project->domains()->sync($domains);
+        $project->tags()->sync($data['tags'] ?? []);
     }
 
     public function createProject(Request $request)
     {
         $this->authorize('createProject', Project::class);
-        $request->validate([
-            'title' => 'required|max:100',
-            'short_description' => 'required|max:100',
-            'domains' => 'required|array|min:1',
-            'domains.*.id' => 'required|integer',
-            'domains.*.importance' => 'required|integer',
-            'tags' => 'array|max:3',
-        ]);
-        $user = $request->user();
-        $project = Project::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'short_description' => $request->short_description,
-            'owner_id' => $user->id,
-            'state' => 0
-        ]);
-        foreach ($request->domains as $o) $domains[$o['id']] = ['importance' => $o['importance']];
-            $project->domains()->attach($domains);
+        $data = $this->validateProject($request, false);
 
-        $project->tags()->attach($request->tags);
+        $project = DB::transaction(function () use ($request, $data) {
+            $project = Project::create([
+                'title' => $data['title'],
+                'description' => $data['description'] ?? '',
+                'short_description' => $data['short_description'],
+                'owner_id' => $request->user()->id,
+                'state' => 0,
+                'year' => Setting::currentYear(),
+            ]);
+            $this->syncRelations($project, $data);
+            return $project;
+        });
+
         return $project->fresh()->load('assigned_users');
     }
 
-    public function selectProject(Request $request){
+    public function editProject(Request $request)
+    {
+        $data = $this->validateProject($request, true);
+        $project = Project::findOrFail($data['id']);
+        $this->authorize('editProject', $project);
+
+        DB::transaction(function () use ($project, $data) {
+            $project->update([
+                'title' => $data['title'],
+                'description' => $data['description'] ?? '',
+                'short_description' => $data['short_description'],
+            ]);
+            $this->syncRelations($project, $data);
+        });
+
+        return $project->fresh()->load('assigned_users');
+    }
+
+    /** Reprend un projet d'une année précédente dans l'année en cours. */
+    public function duplicateProject(Request $request, $id)
+    {
+        $source = Project::findOrFail($id);
+        $this->authorize('duplicate', $source);
+
+        $copy = DB::transaction(function () use ($source) {
+            $copy = Project::create([
+                'title' => $source->title,
+                'description' => $source->description,
+                'short_description' => $source->short_description,
+                'owner_id' => $source->owner_id,
+                'state' => 0,
+                'year' => Setting::currentYear(),
+            ]);
+            $copy->domains()->sync($source->domains->mapWithKeys(fn ($d) => [$d->id => ['importance' => $d->pivot->importance]]));
+            $copy->tags()->sync($source->tags->pluck('id'));
+            return $copy;
+        });
+
+        return $copy->fresh()->load('assigned_users');
+    }
+
+    public function exportPdf(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+        $this->authorize('view', $project);
+
+        $pdf = Pdf::loadView('pdf.project', ['project' => $project])
+            ->setPaper('a4')
+            ->setOption(['isRemoteEnabled' => false, 'isPhpEnabled' => false, 'defaultFont' => 'DejaVu Sans']);
+
+        return $pdf->download(Str::slug($project->title) . '.pdf');
+    }
+
+    private function ensureStudent(Request $request): User
+    {
+        $user = $request->user();
+        abort_unless($user->isStudent(), 403, 'Seuls les étudiants choisissent des projets.');
+        return $user;
+    }
+
+    public function addPreference(Request $request)
+    {
+        $user = $this->ensureStudent($request);
+        $data = $request->validate([
+            'projects' => 'required|array|min:1|max:' . self::MAX_PREFERENCES,
+            'projects.*.id' => ['required', 'integer', 'distinct', Rule::exists('projects', 'id')->where('year', Setting::currentYear())],
+            'projects.*.priority' => 'required|integer|min:1|max:' . self::MAX_PREFERENCES,
+        ]);
+
+        DB::transaction(function () use ($user, $data) {
+            foreach ($data['projects'] as $project) {
+                $preference = Preference::firstOrNew(['project_id' => $project['id'], 'user_id' => $user->id]);
+                $preference->priority = $project['priority'];
+                $preference->save();
+            }
+            // Annule tout si l'étudiant dépasse le maximum de choix.
+            if ($user->preferences()->count() > self::MAX_PREFERENCES) {
+                throw ValidationException::withMessages(['projects' => 'Maximum ' . self::MAX_PREFERENCES . ' projets.']);
+            }
+        });
+
+        return $this->getPreferred($request);
+    }
+
+    public function removePreference(Request $request)
+    {
+        $user = $this->ensureStudent($request);
+        $request->validate(['projects' => 'required|array|min:1|max:' . self::MAX_PREFERENCES]);
+        $user->preferences()->where('project_id', $request->projects[0])->delete();
+        return $this->getPreferred($request);
+    }
+
+    public function selectProject(Request $request)
+    {
         $project = Project::findOrFail($request->id);
-        $project->selected = $request->selected;
+        $project->selected = (bool) $request->selected;
         $project->save();
         return $project->fresh();
     }
 
     public function lockProject(Request $request)
     {
-        //$this->authorize('lockProject', Project::class);
         $project = Project::findOrFail($request->id);
-
-        if( $request->lock )
-            $project->state = 1;
-        else
-            $project->state = 0;
-        
+        $project->state = $request->lock ? 1 : 0;
         $project->save();
         return $project;
     }
 
-    public function editProject(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|integer',
-            'title' => 'required|max:100',
-            'domains' => 'required|array|min:1',
-            'domains.*.id' => 'required|integer',
-            'domains.*.importance' => 'required|integer',
-            'tags' => 'array|max:3',
-        ]);
-        $project = Project::findOrFail($request->id);
-        $this->authorize('editProject', $project);
-        $project->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'short_description' => $request->short_description
-        ]);
-        foreach ($request->domains as $o) $domains[$o['id']] = ['importance' => $o['importance']];
-        $project->domains()->sync($domains);
-        $project->tags()->sync($request->tags);
-        return $project->fresh()->load('assigned_users');
-    }
-
-    public function addPreference(Request $request)
-    {
-        $request->validate([
-            'projects' => 'required|array|min:1|max:5',
-            'projects.*.id' => 'required|integer',
-            'projects.*.priority' => 'required|integer'
-        ]);
-        $user = $request->user();
-        foreach ($request->projects as $project) {
-            $preference = Preference::firstOrNew([
-                'project_id' => $project['id'],
-                'user_id' => $user->id,
-            ]);
-            $preference->priority = $project['priority'];
-            $preference->save();
-        }
-        return $this->getPreferred($request);
-    }
-
-    public function removePreference(Request $request)
-    {
-        $request->validate([
-            'projects' => 'required|array|min:1|max:5',
-        ]);
-        $user = $request->user();
-        $user->preferences()->where('project_id', $request->projects[0])->delete();
-        return $this->getPreferred($request);
-    }
-
     public function addAssignment(Request $request)
     {
-        $request->validate([
-            'project_id' => 'required',
-            'user_id' => 'required',
+        $data = $request->validate([
+            'project_id' => 'required|integer|exists:projects,id',
+            'user_id' => 'required|integer|exists:users,id',
         ]);
-        Assignment::updateOrCreate(
-            ['user_id' => $request->user_id],
-            ['project_id' => $request->project_id]
-        );
-        return User::find($request->user_id);
+        Assignment::updateOrCreate(['user_id' => $data['user_id']], ['project_id' => $data['project_id']]);
+        return User::find($data['user_id']);
     }
 
     public function removeAssignment(Request $request)
     {
-        $request->validate(['user_id' => 'required']);
+        $request->validate(['user_id' => 'required|integer']);
         $user = User::findOrFail($request->user_id);
         $user->assignments()->delete();
         return $user;

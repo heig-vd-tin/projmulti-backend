@@ -7,36 +7,22 @@ use Firebase\JWT\Key;
 
 /**
  * source: https://github.com/robsontenorio/laravel-keycloak-guard
- * author: Robson Tenório https://github.com/robsontenorio
- * author: adapted by Alec Berney https://github.com/alecberney
+ * adapté par Alec Berney
  */
 class Token
 {
-    const JWT_ALGORITHM = 'RS256';
-    const BEGIN_KEY_TEXT = "-----BEGIN PUBLIC KEY-----\n";
-    const END_KEY_TEXT = "\n-----END PUBLIC KEY-----";
+    private const JWT_ALGORITHM = 'RS256';
 
-    /**
-     * Decode a JWT token
-     *
-     * @param  string  $token
-     * @param  string  $publicKey
-     * @return mixed|null
-     */
-    public static function decode(string $publicKey, string $token = null)
+    public static function decode(?string $publicKey, ?string $token): ?object
     {
-        $publicKey = self::buildPublicKey($publicKey);
-        return $token ? JWT::decode($token, new Key($publicKey, self::JWT_ALGORITHM)) : null;
+        if (!$token || !$publicKey) {
+            return null;
+        }
+        return JWT::decode($token, new Key(self::buildPublicKey($publicKey), self::JWT_ALGORITHM));
     }
 
-    /**
-     * Build a valid public key from a string
-     *
-     * @param  string  $key
-     * @return mixed
-     */
-    private static function buildPublicKey(string $key)
+    private static function buildPublicKey(string $key): string
     {
-        return self::BEGIN_KEY_TEXT . wordwrap($key, 64, "\n", true) . self::END_KEY_TEXT;
+        return "-----BEGIN PUBLIC KEY-----\n" . wordwrap($key, 64, "\n", true) . "\n-----END PUBLIC KEY-----";
     }
 }

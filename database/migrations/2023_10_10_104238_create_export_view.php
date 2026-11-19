@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateExportView extends Migration
@@ -13,6 +14,11 @@ class CreateExportView extends Migration
      */
     public function up()
     {
+        // Sur une base neuve, les tables n'existent pas encore à ce stade :
+        // la vue est (re)créée par la migration 2600_01_01_000003.
+        if (!Schema::hasTable('assignments') || !Schema::hasTable('preferences')) {
+            return;
+        }
         DB::statement("
             CREATE VIEW export_data 
             AS

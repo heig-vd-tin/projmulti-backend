@@ -1,95 +1,67 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssignmentController;
-use App\Models\Orientation;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UserController;
 use App\Models\Domain;
+use App\Models\Orientation;
 use App\Models\Tag;
-
-use Illuminate\Contracts\Auth\UserProvider;
-use App\Models\User;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-ini_set("memory_limit","-1");
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')->group(function () {
-    Route::prefix('/project')->controller(ProjectController::class)->group(function () {
-        Route::get('/all', 'getAll');
-        Route::get('/alld', 'getAllWithoutDescription');
-        Route::get('/getdesc/{id}', 'getProject');
-        Route::get('/owned', 'getOwned');
-        Route::get('/preferred', 'getPreferred');
-        Route::get('/assigned', 'getAssigned');
-        
-        Route::post('/select', 'selectProject');
+    // Toujours accessibles, pour que le front puisse afficher « plateforme fermée ».
+    Route::get('/user/me', [UserController::class, 'getMyself']);
+    Route::get('/settings', [SettingController::class, 'show']);
 
-        Route::post('/lock', 'lockProject');        
+    Route::middleware('phase')->group(function () {
+        Route::prefix('/project')->controller(ProjectController::class)->group(function () {
+            Route::get('/all', 'getAll');
+            Route::get('/alld', 'getAllWithoutDescription');
+            Route::get('/getdesc/{id}', 'getProject');
+            Route::get('/owned', 'getOwned');
+            Route::get('/preferred', 'getPreferred');
+            Route::get('/assigned', 'getAssigned');
+            Route::get('/{id}/pdf', 'exportPdf')->whereNumber('id');
 
-        Route::post('/create', 'createProject');
-        Route::post('/edit', 'editProject');
-        Route::post('/add-preference', 'addPreference');
-        Route::post('/remove-preference', 'removePreference');
-        Route::post('/add-assignment', 'addAssignment');
-        Route::post('/remove-assignment', 'removeAssignment');
-    });
+            Route::post('/create', 'createProject');
+            Route::post('/edit', 'editProject');
+            Route::post('/{id}/duplicate', 'duplicateProject')->whereNumber('id');
+            Route::post('/add-preference', 'addPreference');
+            Route::post('/remove-preference', 'removePreference');
 
-    Route::prefix('/user')->controller(UserController::class)->group(function () {
-        Route::get('/me', 'getMyself');
-        Route::get('/all', 'getAll');
-        Route::get('/all-students', 'getAllStudents');
-        Route::get('/unassigned', 'getUnassigned');
-    });
+            Route::middleware('role:admin')->group(function () {
+                Route::post('/select', 'selectProject');
+                Route::post('/lock', 'lockProject');
+                Route::post('/add-assignment', 'addAssignment');
+                Route::post('/remove-assignment', 'removeAssignment');
+            });
+        });
 
-    Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
-        Route::get('/calcul-match', 'calculMatch');
-        Route::get('/auto-select', 'selectProject');
-        Route::get('/auto-affect', 'autoAffect');
-        Route::get('/save-affect/{$current}', 'copyAssignments');
-        Route::get('/rand', 'rand');
-        Route::get('/get-all', 'getAll');
+        Route::get('/orientation/all', fn () => Orientation::orderBy('faculty_acronym')->orderBy('acronym')->get());
+        Route::get('/domain/all', fn () => Domain::all());
+        Route::get('/tag/all', fn () => Tag::orderBy('name')->get());
 
-        Route::post('/load-data', 'loadData');
-        Route::get('/get-export', 'getExportData');
+        Route::middleware('role:admin')->group(function () {
+            Route::prefix('/user')->controller(UserController::class)->group(function () {
+                Route::get('/all', 'getAll');
+                Route::get('/all-students', 'getAllStudents');
+                Route::get('/unassigned', 'getUnassigned');
+            });
 
-        Route::get('/{id}', 'get');
+            Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
+                Route::get('/calcul-match', 'calculMatch');
+                Route::get('/auto-select', 'selectProject');
+                Route::get('/auto-affect', 'autoAffect');
+                Route::get('/save-affect/{source}', 'copyAssignments')->whereNumber('source');
+                Route::get('/get-all', 'getAll');
+                Route::post('/load-data', 'loadData');
+                Route::get('/get-export', 'getExportData');
+                Route::get('/{id}', 'get')->whereNumber('id');
+            });
 
-    });
-
-    Route::get('/orientation/all', function () {
-        return Orientation::orderBy('faculty_acronym')->orderBy('acronym')->get();
-    });
-
-    Route::get('/domain/all', function () {
-        return Domain::all();
-    });
-
-    Route::get('/tag/all', function () {
-        return Tag::orderBy('name')->get();
-    });
-
-    // tmz : login debug
-    Route::get('/logid/{id}', function ($id) {
-        $u = User::find($id);
-        Session::put('user_id', $id);
-        Auth::setUser($u);
-    });
-
-    Route::get('/loguser/{username}', function ($username) {
-        $u = User::where('username', $username)->first();
-        if( $u != null ) {
-            Auth::setUser($u);
-        }
+            Route::put('/settings', [SettingController::class, 'update']);
+            Route::post('/settings/new-year', [SettingController::class, 'newYear']);
+        });
     });
 });

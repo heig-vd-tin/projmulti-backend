@@ -9,7 +9,7 @@ class Project extends Model
 {
     /** Colonnes renvoyées sans la description (qui peut peser plusieurs Mo à cause des images). */
     public const LIGHT_COLUMNS = [
-        'id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'owner_id', 'year',
+        'id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'owner_id', 'year', 'source_id',
         'is_active', 'score', 'miss_student', 'selected', 'nb_student', 'nb_domain', 'state',
     ];
 
@@ -22,6 +22,7 @@ class Project extends Model
         'score',
         'state',
         'year',
+        'source_id',
     ];
 
     protected $casts = [

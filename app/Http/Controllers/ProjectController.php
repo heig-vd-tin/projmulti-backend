@@ -160,6 +160,13 @@ class ProjectController extends Controller
     {
         $source = Project::findOrFail($id);
         $this->authorize('duplicate', $source);
+        $existing = Project::currentYear()->where('source_id', $source->id)->first();
+        if ($existing) {
+            return response()->json([
+                'message' => "Ce projet a déjà été repris pour le cours {$existing->year}.",
+                'project_id' => $existing->id,
+            ], 409);
+        }
 
         $copy = DB::transaction(function () use ($source) {
             $copy = Project::create([
@@ -169,6 +176,7 @@ class ProjectController extends Controller
                 'owner_id' => $source->owner_id,
                 'state' => 0,
                 'year' => Setting::currentYear(),
+                'source_id' => $source->id,
             ]);
             $copy->domains()->sync($source->domains->mapWithKeys(fn ($d) => [$d->id => ['importance' => $d->pivot->importance]]));
             $copy->tags()->sync($source->tags->pluck('id'));

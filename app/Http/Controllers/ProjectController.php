@@ -79,7 +79,8 @@ class ProjectController extends Controller
 
     public function getPreferred(Request $request)
     {
-        return $request->user()->preferences()->with('project')->get()
+        // Sans la description (plusieurs Mo par projet à cause des images).
+        return $request->user()->preferences()->with(['project' => fn ($q) => $q->select(Project::LIGHT_COLUMNS)])->get()
             ->filter(fn ($p) => $p->project !== null)
             ->map(function ($preference) {
                 $project = $preference->project;
@@ -230,6 +231,7 @@ class ProjectController extends Controller
 
     public function selectProject(Request $request)
     {
+        $request->validate(['id' => 'required|integer', 'selected' => 'required|boolean']);
         $project = Project::findOrFail($request->id);
         $project->selected = (bool) $request->selected;
         $project->save();
@@ -238,6 +240,7 @@ class ProjectController extends Controller
 
     public function lockProject(Request $request)
     {
+        $request->validate(['id' => 'required|integer', 'lock' => 'required|boolean']);
         $project = Project::findOrFail($request->id);
         $project->state = $request->lock ? 1 : 0;
         $project->save();

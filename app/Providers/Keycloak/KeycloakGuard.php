@@ -139,12 +139,22 @@ class KeycloakGuard implements Guard
 
     private function ldapRequest(string $email): ?array
     {
+        // Le certificat LDAPS de l'école est signé par une autorité interne (HEIG-RootCA) et émis
+        // pour einet.ad.eivd.ch : sans ce certificat racine, la vérification doit être désactivée
+        // (LDAP_TLS_REQUIRE_CERT=never, comme sur l'ancienne VM).
+        if (config('services.ldap.ca_cert')) {
+            ldap_set_option(null, LDAP_OPT_X_TLS_CACERTFILE, config('services.ldap.ca_cert'));
+        }
+        ldap_set_option(null, LDAP_OPT_X_TLS_REQUIRE_CERT,
+            config('services.ldap.tls_require_cert') === 'never' ? LDAP_OPT_X_TLS_NEVER : LDAP_OPT_X_TLS_DEMAND);
+
         $conn = ldap_connect(config('services.ldap.server'));
         if (!$conn) {
             return null;
         }
         ldap_set_option($conn, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($conn, LDAP_OPT_REFERRALS, 0);
+        ldap_set_option($conn, LDAP_OPT_NETWORK_TIMEOUT, 10);
 
         $bound = false;
         for ($i = 0; $i < 5 && !$bound; $i++) {

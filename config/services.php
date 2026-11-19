@@ -40,6 +40,9 @@ return [
         'user' => env('LDAP_USER', 'iai-ldap'),
         'password' => env('LDAP_PASSWORD'),
         'base_dn' => env('LDAP_BASE_DN', 'DC=einet,DC=ad,DC=eivd,DC=ch'),
+        // demand (vérifie le certificat) ou never ; LDAP_CA_CERT = chemin du certificat racine de l'école
+        'tls_require_cert' => env('LDAP_TLS_REQUIRE_CERT', 'demand'),
+        'ca_cert' => env('LDAP_CA_CERT'),
     ],
 
 ];

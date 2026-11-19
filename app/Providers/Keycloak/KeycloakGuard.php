@@ -60,56 +60,76 @@ class KeycloakGuard implements Guard
 
     public function map_orientation($ldap_data): string
     {
-        $department = json_decode(json_encode($ldap_data['department'][0], JSON_INVALID_UTF8_IGNORE));
-        switch ($department) {
-            case "Technique et IT - Electronique et Automatisation industrielle":
-                return "EAI";
-            case "Technique et IT - Electronique embarque et Mcatronique":
-                return "EEM";
-            case "Technique et IT - Systmes nergtiques":
-                return "EN";
-            case "Technique et IT - Energtique du btiment":
-                return "EBA";
-            case "Technique et IT - Thermique industrielle":
-                return "THI";
-            case "Technique et IT - Thermotronique":
-                return "THO";
-            case "Technique et IT - Ingnierie et gestion industrielles":
-                return "IGIS";
-            case "Technique et IT - Logistique et organisation industrielles":
-                return "IGLO";
-            case "Technique et IT - Qualit et performances industrielles":
-                return "IGQP";
-            case "Technique et IT - Microtechniques":
-                return "MI";
-                case "Technique et IT - Conception de machines":
+        $description = json_decode(json_encode($ldap_data['description'][0], JSON_INVALID_UTF8_IGNORE));
+        switch (strtolower($description)) {
+            case stripos($description, 'conception') !== false && stripos($description, 'machine') !== false:
                 return "SIC";
-            case "Technique et IT - Informatique embarque":
-                return "IE";
-            case "Technique et IT - Logiciel":
-                return "IL";
-            case "Technique et IT - Systmes de gestion":
-                return "SG";
-            case "Technique et IT - Ingnierie des donnes":
-                return "ISCD";
-            case "Technique et IT - Systmes informatiques embarqus":
-                return "ISCE";
-            case "Technique et IT - Informatique logicielle":
-                return "ISCL";
-            case "Technique et IT - Rseaux et systmes":
-                return "ISCR";
-            case "Technique et IT - Scurit informatique":
-                return "ISCS";
-            case "Technique et IT - Rseaux et services":
-                return "TR";
-            case "Technique et IT - Scurit de l'information":
-                return "TS";
-            case "Economie et services - Economie d'entreprise":
-                return "EE";
-            case "Technique et IT - Ingnierie des mdias":
-                return "IM";
-            case "Architecture, construction et planification":
-                return "!!!";
+            case stripos($description, 'automatisation') !== false:
+                return "EAI";
+            case stripos($description, 'lectronique') !== false:
+                return "EEM";
+            case stripos($description, 'énergétiques') !== false:
+                return "EN";
+            case stripos($description, 'thermique') !== false:
+                return "THI";
+            case stripos($description, 'microtechnique') !== false:
+                return "MI";
+            
+        
+        // switch (strtolower($department)) {
+        //     case strtolower("Technique et IT - Electronique et automatisation industrielle"):
+        //         return "EAI";
+        //     case strtolower("Technique et IT - Electronique embarquée et Mécatronique"):
+        //         return "EEM";
+        //     case strtolower("Technique et IT - Systèmes énergétiques"):
+        //         return "EN";
+        //     case strtolower("Technique et IT - Energie et techniques environnementales"):
+		//         return "ETE";
+        //     case strtolower("Technique et IT - Energétique du bâtiment"):
+        //         return "EBA";
+        //     case strtolower("Technique et IT - Thermique industrielle"):
+        //         return "THI";
+        //     case strtolower("Technique et IT - Thermotronique"):
+        //         return "THO";
+        //     case strtolower("Technique et IT - Ingnierie et gestion industrielles"):
+        //         return "IGIS";
+        //     case strtolower("Technique et IT - Logistique et organisation industrielles"):
+        //         return "IGLO";
+        //     case strtolower("Technique et IT - Qualit et performances industrielles"):
+        //         return "IGQP";
+        //     case strtolower("Technique et IT - Robotique et conception microtechnique"):
+        //         return "MI";
+        //     case strtolower("Technique et IT - Conception de machines"):
+        //         return "SIC";
+        //     case strtolower("Technique et IT - Informatique embarque"):
+        //         return "IE";
+        //     case strtolower("Technique et IT - Logiciel"):
+        //         return "IL";
+        //     case strtolower("Technique et IT - Systmes de gestion"):
+        //         return "SG";
+        //     case strtolower("Technique et IT - Ingnierie des donnes"):
+        //         return "ISCD";
+        //     case strtolower("Technique et IT - Systmes informatiques embarqus"):
+        //         return "ISCE";
+        //     case strtolower("Technique et IT - Informatique logicielle"):
+        //         return "ISCL";
+        //     case strtolower("Technique et IT - Rseaux et systmes"):
+        //         return "ISCR";
+        //     case strtolower("Technique et IT - Scurit informatique"):
+        //         return "ISCS";
+        //     case strtolower("Technique et IT - Rseaux et services"):
+        //         return "TR";
+        //     case strtolower("Technique et IT - Scurit de l'information"):
+        //         return "TS";
+        //     case strtolower("Economie et services - Economie d'entreprise"):
+        //         return "EE";
+        //     case strtolower("Technique et IT - Ingnierie des mdias"):
+        //         return "IM";
+	    //     case strtolower("Informatique et système d'information"):
+		//         return "EAI";
+        //     case strtolower("Architecture, construction et planification"):
+        //         return "!!!";
+
 
             // WARNING TODO TMZ : mauvais user dans LDAP
             case "Formation de base":
@@ -172,16 +192,26 @@ class KeycloakGuard implements Guard
 
     public function ldap_request($user_email)
     {
-        $ldapserver = 'ldap.heig-vd.ch';
+        $ldapserver = 'ldaps://ldaps.heig-vd.ch:636/';
         $ldapuser = 'iai-ldap';
         $ldappass = env('LDAP_PASSWORD', null);
         $ldaptree = "DC=einet,DC=ad,DC=eivd,DC=ch";
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
+	ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
+	//ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 1);
         if ($ldapconn) {
-            $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or die("Error trying to bind: " . ldap_error($ldapconn));
+	    for($i=0; $i<5; $i++){
+                $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass);// or die("Error trying to bind: " . ldap_error($ldapconn));
+		if($ldapbind){
+		    break;
+		}
+		else{
+		    'Error : ' . $i . ' txt : ' . ldap_error($ldapconn);
+		}
+	    }
             if ($ldapbind) {
                 $filtre = "(|(mail=$user_email*))";
-                $restriction = array("cn", "sn", "department", "title");
+                $restriction = array("cn", "sn", "department", "title", "description");
                 $result = ldap_search($ldapconn, $ldaptree, $filtre, $restriction) or die("Error in search query: " . ldap_error($ldapconn));
                 $this->ldapData = ldap_get_entries($ldapconn, $result)[0];
             }
@@ -245,6 +275,8 @@ class KeycloakGuard implements Guard
     {
         if (!$this->decodedToken) return false;
         $user = $this->provider->retrieveByCredentials($credentials);
+            //$this->ldap_request($this->decodedToken->email);
+	  //  dd("hhh");
         if (is_null($user)) {
             $this->ldap_request($this->decodedToken->email);
 	    if (!$this->ldapData){

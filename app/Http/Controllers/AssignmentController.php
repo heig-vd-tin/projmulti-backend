@@ -7,6 +7,7 @@ use App\Models\Assignment;
 use App\Models\Preference;
 use App\Models\ProjectMatch;
 use App\Models\User;
+use App\Services\AssignmentLocks;
 use App\Services\AssignmentSolver;
 use RuntimeException;
 use Illuminate\Support\Facades\DB;
@@ -40,18 +41,31 @@ class AssignmentController extends Controller
             'data.*.domain_id' => 'nullable|integer|exists:domains,id',
             'data.*.level' => 'nullable|integer',
         ]);
-        DB::transaction(function () use ($data) {
-            Assignment::query()->delete();
+        // Les étudiants et projets verrouillés gardent leur équipe actuelle ; le reste est remplacé.
+        return DB::transaction(function () use ($data) {
+            $frozen = AssignmentLocks::frozenStudentIds();
+            $lockedProjects = AssignmentLocks::lockedProjectIds();
+            Assignment::query()->whereNotIn('user_id', $frozen)->delete();
+            $loaded = 0;
+            $skipped = 0;
+            $seen = [];
             foreach ($data['data'] as $value) {
+                $uid = $value['user_id'];
+                if (in_array($uid, $frozen) || in_array($value['project_id'], $lockedProjects) || isset($seen[$uid])) {
+                    $skipped++;
+                    continue;
+                }
+                $seen[$uid] = true;
                 Assignment::create([
                     'project_id' => $value['project_id'],
-                    'user_id' => $value['user_id'],
+                    'user_id' => $uid,
                     'domain_id' => $value['domain_id'] ?? null,
                     'level' => $value['level'] ?? 0,
                 ]);
+                $loaded++;
             }
+            return ['loaded' => $loaded, 'skipped' => $skipped, 'kept' => count($frozen)];
         });
-        return null;
     }
 
     public function get(Request $request, $id)
@@ -364,6 +378,10 @@ class AssignmentController extends Controller
         $level = Assignment::max('level');
         if($level >= 10)
             return response()->json(['message' => 'La répartition a déjà été sauvegardée, impossible de la refaire.'], 422);
+
+        // L'ancien algorithme efface toute la répartition : il ne respecte pas les verrous.
+        if (AssignmentLocks::lockedProjectIds() || AssignmentLocks::frozenStudentIds())
+            return response()->json(['message' => "Des projets ou des étudiants sont verrouillés et l'ancien algorithme efface toute la répartition. Utilisez « Calculer la répartition », qui respecte les verrous, ou déverrouillez-les d'abord."], 422);
 
         for($i=0; $i<=6; $i++)
             $this->assign_auto($i);

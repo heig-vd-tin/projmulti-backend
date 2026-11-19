@@ -7,6 +7,7 @@ use App\Models\Preference;
 use App\Models\Project;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AssignmentLocks;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -261,14 +262,28 @@ class ProjectController extends Controller
             'project_id' => 'required|integer|exists:projects,id',
             'user_id' => 'required|integer|exists:users,id',
         ]);
-        Assignment::updateOrCreate(['user_id' => $data['user_id']], ['project_id' => $data['project_id']]);
-        return User::find($data['user_id']);
+        $user = User::findOrFail($data['user_id']);
+        $project = Project::findOrFail($data['project_id']);
+        if ($user->excluded) {
+            return response()->json(['message' => "{$user->firstname} {$user->lastname} est exclu de la répartition : réintégrez-le d'abord."], 422);
+        }
+        if ($project->state == 1) {
+            return response()->json(['message' => AssignmentLocks::projectMessage($project)], 422);
+        }
+        if ($reason = AssignmentLocks::studentReason($user)) {
+            return response()->json(['message' => $reason], 422);
+        }
+        Assignment::updateOrCreate(['user_id' => $user->id], ['project_id' => $project->id]);
+        return $user;
     }
 
     public function removeAssignment(Request $request)
     {
         $request->validate(['user_id' => 'required|integer']);
         $user = User::findOrFail($request->user_id);
+        if ($reason = AssignmentLocks::studentReason($user)) {
+            return response()->json(['message' => $reason], 422);
+        }
         $user->assignments()->delete();
         return $user;
     }

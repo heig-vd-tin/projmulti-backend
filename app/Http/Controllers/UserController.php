@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Constants\UserRole;
 use App\Models\User;
+use App\Services\AssignmentLocks;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -31,6 +32,13 @@ class UserController extends Controller
             'locked' => 'sometimes|boolean',
         ]);
         $user = User::where('role', UserRole::STUDENT)->findOrFail($id);
+        if (!empty($data['excluded']) && !$user->excluded && ($reason = AssignmentLocks::studentReason($user))) {
+            // Exclure retirerait l'étudiant d'une équipe figée.
+            return response()->json(['message' => $reason], 422);
+        }
+        if (!empty($data['locked']) && !$user->assignments()->exists()) {
+            return response()->json(['message' => "{$user->firstname} {$user->lastname} n'est pas affecté : affectez-le avant de verrouiller."], 422);
+        }
         $user->fill($data);
         if ($user->excluded) {
             // Un étudiant retiré n'est plus affecté.

@@ -58,23 +58,14 @@ class AssignmentController extends Controller
         return $assignment->load(['user', 'project', 'domain']);
     }
 
+    /** Orientations qui couvrent le domaine (table domain_orientation), élargies ou non. */
     function get_orientation_from_domain($domain, $enlarge)
     {
-        switch ($domain->id){
-            case '1': // meca
-                return $enlarge ? [7,8] : [7,8];
-            case '2': // electronic
-                return $enlarge ? [2,7,3] : [2];
-            case '3': // electric
-                return $enlarge ? [2,3,7] : [2,3];
-            case '4': // Thermic
-                return [5,6];
-            case '5': // Energy
-                return [4];
-            case '6': // Programming
-                return $enlarge ? [1,2,7] : [1];
-        }
-        return [];
+        return DB::table('domain_orientation')
+            ->where('domain_id', $domain->id)
+            ->when(!$enlarge, fn ($q) => $q->where('enlarged', false))
+            ->pluck('orientation_id')
+            ->all();
     }
 
     function fill_match_table($clean, $enlarge){
@@ -88,6 +79,7 @@ class AssignmentController extends Controller
                 $match_orientation = $this->get_orientation_from_domain($domain, $enlarge);
                 $users = $project->preferred_users()
                         ->wherein('orientation_id', $match_orientation )
+                        ->where('users.excluded', false)
                         ->get();
                 
                 foreach ($users as $user){

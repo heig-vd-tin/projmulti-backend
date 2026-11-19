@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Constants\UserRole;
 use App\Models\Assignment;
+use App\Models\Domain;
 use App\Models\Preference;
 use App\Models\Project;
 use App\Models\ProjectMatch;
@@ -71,5 +72,36 @@ class SettingController extends Controller
 
         Log::warning('Nouvelle année démarrée', ['annee' => $data['year'], 'par' => $request->user()->email]);
         return $this->show();
+    }
+
+    /** Orientations qui couvrent chaque domaine (utilisé par la répartition automatique). */
+    public function domainMapping()
+    {
+        return Domain::with('orientations')->orderBy('id')->get()->map(fn ($d) => [
+            'domain_id' => $d->id,
+            'name' => $d->name,
+            'base' => $d->orientations->where('pivot.enlarged', false)->pluck('id')->values(),
+            'enlarged' => $d->orientations->where('pivot.enlarged', true)->pluck('id')->values(),
+        ]);
+    }
+
+    public function updateDomainMapping(Request $request)
+    {
+        $data = $request->validate([
+            'mapping' => 'required|array',
+            'mapping.*.domain_id' => 'required|integer|exists:domains,id',
+            'mapping.*.base' => 'present|array',
+            'mapping.*.base.*' => 'integer|exists:orientations,id',
+            'mapping.*.enlarged' => 'present|array',
+            'mapping.*.enlarged.*' => 'integer|exists:orientations,id',
+        ]);
+        DB::transaction(function () use ($data) {
+            foreach ($data['mapping'] as $row) {
+                $sync = collect($row['enlarged'])->mapWithKeys(fn ($o) => [$o => ['enlarged' => true]])
+                    ->union(collect($row['base'])->mapWithKeys(fn ($o) => [$o => ['enlarged' => false]]));
+                Domain::findOrFail($row['domain_id'])->orientations()->sync($sync->all());
+            }
+        });
+        return $this->domainMapping();
     }
 }

@@ -47,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::get('/all', 'getAll');
                 Route::get('/all-students', 'getAllStudents');
                 Route::get('/unassigned', 'getUnassigned');
+                Route::post('/{id}/flags', 'updateFlags')->whereNumber('id');
             });
 
             Route::prefix('/assignment')->controller(AssignmentController::class)->group(function () {
@@ -62,6 +63,8 @@ Route::middleware('auth:api')->group(function () {
 
             Route::put('/settings', [SettingController::class, 'update']);
             Route::post('/settings/new-year', [SettingController::class, 'newYear']);
+            Route::get('/settings/domain-mapping', [SettingController::class, 'domainMapping']);
+            Route::put('/settings/domain-mapping', [SettingController::class, 'updateDomainMapping']);
         });
     });
 });

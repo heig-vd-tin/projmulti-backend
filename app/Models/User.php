@@ -18,6 +18,8 @@ class User extends Authenticatable
         'orientation_id',
         'password',
         'initials',
+        'excluded',
+        'locked',
     ];
 
     protected $hidden = [
@@ -27,6 +29,10 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        // Étudiant retiré de la répartition (sujet personnel, abandon).
+        'excluded' => 'boolean',
+        // Affectation figée : la répartition automatique ne la change pas.
+        'locked' => 'boolean',
     ];
 
     protected $with = [

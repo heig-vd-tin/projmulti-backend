@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             OrientationSeeder::class,
             DomainSeeder::class,
             TagSeeder::class,
+            DomainOrientationSeeder::class,
         ]);
     }
 }

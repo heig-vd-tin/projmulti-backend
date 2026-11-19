@@ -17,32 +17,32 @@ class DomainSeeder extends Seeder
         $datas = [
             [
                 'id' => 1,
-                'name' => 'Mecanic',
+                'name' => 'Mécanique',
                 'icon' => 'mdi-cog-outline',
             ],
             [
                 'id' => 2,
-                'name' => 'Electronic',
+                'name' => 'Électronique',
                 'icon' => 'mdi-cpu-64-bit',
             ],
             [
                 'id' => 3,
-                'name' => 'Electricity',
+                'name' => 'Électricité',
                 'icon' => 'mdi-lightning-bolt-circle',
             ],
             [
                 'id' => 4,
-                'name' => 'Thermic',
+                'name' => 'Thermique',
                 'icon' => 'mdi-hydraulic-oil-temperature',
             ],
             [
                 'id' => 5,
-                'name' => 'Energy',
+                'name' => 'Énergie',
                 'icon' => 'mdi-home-city-outline',
             ],
             [
                 'id' => 6,
-                'name' => 'Programming',
+                'name' => 'Programmation',
                 'icon' => 'mdi-laptop',
             ],
         ];

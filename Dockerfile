@@ -7,7 +7,8 @@ WORKDIR /src
 COPY --from=frontend package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY --from=frontend . .
-RUN npx vue-cli-service build --dest /dist
+# Le front définit « npm run build » qui produit dist/ (Vue CLI ou Vite).
+RUN npm run build && mv dist /dist
 
 FROM composer:2 AS vendor
 WORKDIR /app

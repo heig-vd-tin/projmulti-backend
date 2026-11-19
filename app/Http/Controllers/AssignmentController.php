@@ -7,6 +7,8 @@ use App\Models\Assignment;
 use App\Models\Preference;
 use App\Models\ProjectMatch;
 use App\Models\User;
+use App\Services\AssignmentSolver;
+use RuntimeException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -381,4 +383,20 @@ class AssignmentController extends Controller
 
 
 
+    /** Répartition optimale (solveur CBC) ; remplace les affectations non verrouillées. */
+    public function solve(Request $request)
+    {
+        $options = $request->validate([
+            'min_size' => 'sometimes|integer|min:1|max:10',
+            'max_size' => 'sometimes|integer|min:1|max:10|gte:min_size',
+            'max_same_orientation' => 'sometimes|integer|min:1|max:10',
+            'allow_fifth_choice' => 'sometimes|boolean',
+            'allow_out_of_choice' => 'sometimes|boolean',
+        ]);
+        try {
+            return (new AssignmentSolver($options))->solve();
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 }

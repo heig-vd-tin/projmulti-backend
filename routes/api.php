@@ -57,6 +57,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::get('/save-affect/{source}', 'copyAssignments')->whereNumber('source');
                 Route::get('/get-all', 'getAll');
                 Route::post('/load-data', 'loadData');
+                Route::post('/solve', 'solve');
                 Route::get('/get-export', 'getExportData');
                 Route::get('/{id}', 'get')->whereNumber('id');
             });

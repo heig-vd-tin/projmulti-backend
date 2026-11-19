@@ -20,6 +20,7 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 FROM php:8.5-apache
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions pdo_mysql ldap gd opcache \
+ && apt-get update && apt-get install -y --no-install-recommends coinor-cbc && rm -rf /var/lib/apt/lists/* \
  && a2enmod rewrite headers \
  && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 

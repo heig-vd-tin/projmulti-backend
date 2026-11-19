@@ -6,6 +6,8 @@ return [
     'distinct' => 'Le champ :attribute contient un doublon.',
     'exists' => "La valeur choisie pour :attribute n'existe pas ou n'est pas disponible.",
     'gt' => ['numeric' => 'Le champ :attribute doit être supérieur à :value.'],
+    'gte' => ['numeric' => 'Le champ :attribute doit être supérieur ou égal à :value.'],
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
     'in' => 'La valeur du champ :attribute est invalide.',
     'integer' => 'Le champ :attribute doit être un nombre entier.',
     'max' => [
@@ -29,5 +31,8 @@ return [
         'projects' => 'projets',
         'projects.*.id' => 'projet',
         'year' => 'année',
+        'min_size' => 'taille minimale',
+        'max_size' => 'taille maximale',
+        'max_same_orientation' => "nombre max d'étudiants d'une même orientation",
     ],
 ];

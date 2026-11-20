@@ -27,6 +27,7 @@ Route::middleware('auth:api')->group(function () {
             Route::post('/create', 'createProject');
             Route::post('/edit', 'editProject');
             Route::post('/{id}/duplicate', 'duplicateProject')->whereNumber('id');
+            Route::post('/{id}/propose', 'proposeProject')->whereNumber('id');
             Route::post('/add-preference', 'addPreference');
             Route::post('/remove-preference', 'removePreference');
 

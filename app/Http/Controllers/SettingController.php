@@ -50,10 +50,10 @@ class SettingController extends Controller
         $current = Setting::currentYear();
         $data = $request->validate([
             'year' => ['required', 'integer', 'gt:' . $current, 'max:' . ($current + 5)],
-            'confirm' => ['required', 'in:NOUVELLE ANNÉE,NOUVELLE ANNEE'],
         ], [
+            'year.required' => 'Indiquez la nouvelle année.',
             'year.gt' => "La nouvelle année doit être après l'année courante ($current).",
-            'confirm.in' => 'Tapez NOUVELLE ANNÉE pour confirmer.',
+            'year.max' => 'La nouvelle année doit être au plus ' . ($current + 5) . '.',
         ]);
 
         DB::transaction(function () use ($data) {

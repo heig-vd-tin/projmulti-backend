@@ -10,7 +10,7 @@ class Project extends Model
     /** Colonnes renvoyées sans la description (qui peut peser plusieurs Mo à cause des images). */
     public const LIGHT_COLUMNS = [
         'id', 'created_at', 'updated_at', 'title', 'reference', 'short_description', 'owner_id', 'year', 'source_id',
-        'is_active', 'score', 'miss_student', 'selected', 'nb_student', 'nb_domain', 'state',
+        'is_active', 'score', 'miss_student', 'selected', 'proposed', 'nb_student', 'nb_domain', 'state',
     ];
 
     protected $fillable = [
@@ -23,12 +23,14 @@ class Project extends Model
         'state',
         'year',
         'source_id',
+        'proposed',
     ];
 
     protected $casts = [
         'year' => 'integer',
         'state' => 'integer',
         'selected' => 'boolean',
+        'proposed' => 'boolean',
         'is_active' => 'boolean',
         'miss_student' => 'boolean',
     ];
@@ -51,6 +53,17 @@ class Project extends Model
     public function scopeCurrentYear(Builder $query): Builder
     {
         return $query->where('year', Setting::currentYear());
+    }
+
+    /**
+     * Projets visibles par l'utilisateur : les brouillons seulement pour leur responsable (et l'admin).
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isAdmin()) {
+            return $query;
+        }
+        return $query->where(fn ($q) => $q->where('proposed', true)->orWhere('owner_id', $user->id));
     }
 
     public function isCurrentYear(): bool

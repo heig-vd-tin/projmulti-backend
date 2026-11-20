@@ -50,13 +50,13 @@ class ProjectController extends Controller
 
     public function getAll(Request $request)
     {
-        $projects = Project::ofYear($this->requestedYear($request))->get();
+        $projects = Project::ofYear($this->requestedYear($request))->visibleTo($request->user())->get();
         return $this->withAdminRelations($request, $projects);
     }
 
     public function getAllWithoutDescription(Request $request)
     {
-        $projects = Project::select(Project::LIGHT_COLUMNS)->ofYear($this->requestedYear($request))->get();
+        $projects = Project::select(Project::LIGHT_COLUMNS)->ofYear($this->requestedYear($request))->visibleTo($request->user())->get();
         return $this->withAdminRelations($request, $projects);
     }
 
@@ -107,6 +107,7 @@ class ProjectController extends Controller
             'domains.*.importance' => 'required|integer',
             'tags' => 'nullable|array|max:3',
             'tags.*' => 'integer|exists:tags,id',
+            'proposed' => 'sometimes|boolean',
         ], self::MESSAGES);
     }
 
@@ -130,6 +131,7 @@ class ProjectController extends Controller
                 'owner_id' => $request->user()->id,
                 'state' => 0,
                 'year' => Setting::currentYear(),
+                'proposed' => $data['proposed'] ?? true,
             ]);
             $this->syncRelations($project, $data);
             return $project;
@@ -150,9 +152,32 @@ class ProjectController extends Controller
                 'description' => $data['description'] ?? '',
                 'short_description' => $data['short_description'],
             ]);
+            if (array_key_exists('proposed', $data)) {
+                $this->applyProposed($project, (bool) $data['proposed']);
+            }
             $this->syncRelations($project, $data);
         });
 
+        return $project->fresh()->load('assigned_users');
+    }
+
+    /** Proposé aux étudiants ou brouillon. Un brouillon ne peut pas rester sélectionné. */
+    private function applyProposed(Project $project, bool $proposed): void
+    {
+        $project->proposed = $proposed;
+        if (!$proposed) {
+            $project->selected = false;
+        }
+        $project->save();
+    }
+
+    /** Bouton « Proposé / Brouillon » de la liste des projets du prof. */
+    public function proposeProject(Request $request, $id)
+    {
+        $data = $request->validate(['proposed' => 'required|boolean']);
+        $project = Project::findOrFail($id);
+        $this->authorize('editProject', $project);
+        $this->applyProposed($project, (bool) $data['proposed']);
         return $project->fresh()->load('assigned_users');
     }
 
@@ -211,7 +236,7 @@ class ProjectController extends Controller
         $user = $this->ensureStudent($request);
         $data = $request->validate([
             'projects' => 'required|array|min:1|max:' . self::MAX_PREFERENCES,
-            'projects.*.id' => ['required', 'integer', 'distinct', Rule::exists('projects', 'id')->where('year', Setting::currentYear())],
+            'projects.*.id' => ['required', 'integer', 'distinct', Rule::exists('projects', 'id')->where('year', Setting::currentYear())->where('proposed', true)],
             'projects.*.priority' => 'required|integer|min:1|max:' . self::MAX_PREFERENCES,
         ]);
 
@@ -242,6 +267,9 @@ class ProjectController extends Controller
     {
         $request->validate(['id' => 'required|integer', 'selected' => 'required|boolean']);
         $project = Project::findOrFail($request->id);
+        if ($request->selected && !$project->proposed) {
+            return response()->json(['message' => "Ce projet est un brouillon : son responsable doit d'abord le proposer."], 422);
+        }
         $project->selected = (bool) $request->selected;
         $project->save();
         return $project->fresh();

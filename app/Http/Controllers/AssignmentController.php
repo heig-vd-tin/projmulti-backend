@@ -246,8 +246,12 @@ class AssignmentController extends Controller
         $nb_student_per_project = 4;
         $nb_prj_need = intdiv(User::where('role', 'like', 'student')->count(), $nb_student_per_project);
 
+        // Les brouillons n'entrent jamais dans la sélection.
+        $drafts = Project::where('proposed', false)->pluck('id')->all();
+
         $matches = DB::table('matches')
             ->select('project_id', DB::raw('count(*) as nb'))
+            ->whereNotIn('project_id', $drafts)
             ->where('priority', '<=', 3)
             ->where('enlarge', '=', false)
             ->groupBy('project_id')
@@ -283,6 +287,7 @@ class AssignmentController extends Controller
                 ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('owner_id', '=', $prof->id)
+                ->where('proposed', '=', true)
                 ->where('enlarge', '=', false)
                 ->groupBy('project_id')
                 ->orderBy('nb', 'desc')
@@ -304,6 +309,7 @@ class AssignmentController extends Controller
                 ->select('project_id', 'owner_id', DB::raw('count(*) as nb'))
                 ->join('projects', 'matches.project_id', '=', 'projects.id')
                 ->where('selected', '=', false)
+                ->where('proposed', '=', true)
                 ->where('enlarge', '=', false)
                 ->groupBy('project_id')
                 ->orderBy('nb', 'desc')

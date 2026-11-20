@@ -17,6 +17,10 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
+        // Brouillon : visible seulement par son responsable.
+        if (!$project->proposed && $user->id !== $project->owner_id) {
+            return false;
+        }
         // Les étudiants ne voient que les projets de l'année en cours.
         return !$user->isStudent() || $project->isCurrentYear();
     }
